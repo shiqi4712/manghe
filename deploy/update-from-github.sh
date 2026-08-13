@@ -37,6 +37,7 @@ else
   find "$APP_DIR" -mindepth 1 -maxdepth 1 ! -name .env ! -name node_modules -exec rm -rf -- {} +
   cp -a "$TEMP_DIR"/. "$APP_DIR"/
   chown -R "$APP_OWNER" "$APP_DIR"
+  chmod 755 "$APP_DIR"
 fi
 
 sudo -u "$APP_OWNER" -H npm ci --omit=dev
