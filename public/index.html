@@ -1027,9 +1027,7 @@
       playStartSound();
       navigator.vibrate?.([30, 35, 55]);
 
-      const randomValues = new Uint32Array(1);
-      crypto.getRandomValues(randomValues);
-      const winnerPrizeIndex = randomValues[0] % prizes.length;
+      const winnerPrizeIndex = 1;
       const winnerTrackIndex = 9 * prizes.length + winnerPrizeIndex;
       winnerElement = track.children[winnerTrackIndex];
       const destination = shell.clientWidth / 2 - itemCenter(winnerElement);
