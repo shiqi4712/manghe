@@ -1,0 +1,21 @@
+[Unit]
+Description=Bianchengmao Surprise Draw
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/surprise-draw
+EnvironmentFile=/var/www/surprise-draw/.env
+ExecStart=/usr/bin/node /var/www/surprise-draw/server.js
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

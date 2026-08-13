@@ -1,0 +1,1162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07131f">
+  <title>编程猫惊喜盲盒</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f7fbff;
+      --muted: rgba(220, 235, 246, .68);
+      --line: rgba(255, 255, 255, .12);
+      --glass: rgba(255, 255, 255, .075);
+      --item-width: clamp(112px, 31vw, 142px);
+      --item-gap: 12px;
+      --reel-time: 5.2s;
+      --spring: cubic-bezier(.18, .9, .24, 1.18);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 13% 12%, rgba(48, 128, 211, .25), transparent 25rem),
+        radial-gradient(circle at 92% 25%, rgba(36, 211, 190, .17), transparent 25rem),
+        radial-gradient(circle at 50% 108%, rgba(255, 190, 63, .12), transparent 31rem),
+        linear-gradient(145deg, #07131f 0%, #0d1d31 50%, #071721 100%);
+      font-family: "Avenir Next Rounded", "PingFang SC", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    button { font: inherit; }
+
+    .sky,
+    .sky::before,
+    .sky::after {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .sky { z-index: -1; overflow: hidden; }
+    .sky::before {
+      content: "";
+      opacity: .32;
+      background-image:
+        radial-gradient(circle, #fff 0 1px, transparent 1.5px),
+        radial-gradient(circle, #fff 0 1px, transparent 1.5px);
+      background-position: 12px 18px, 64px 74px;
+      background-size: 84px 84px, 126px 126px;
+      animation: starDrift 18s linear infinite;
+    }
+
+    .sky::after {
+      content: "";
+      inset: -30%;
+      background: conic-gradient(from 120deg, transparent, rgba(53, 222, 198, .1), transparent 27%, rgba(55, 133, 231, .14), transparent 56%);
+      filter: blur(34px);
+      animation: aurora 16s ease-in-out infinite alternate;
+    }
+
+    .app {
+      width: min(100%, 760px);
+      min-height: 100svh;
+      margin: 0 auto;
+      padding: max(19px, env(safe-area-inset-top)) 0 max(22px, env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .topbar {
+      min-height: 42px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      animation: rise .6s both;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .brand-mark {
+      width: 34px;
+      aspect-ratio: 1;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: #06131e;
+      background: linear-gradient(145deg, #83f5e1, #35c8e4);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.4), 0 7px 22px rgba(53, 210, 221, .25), inset 0 1px 0 #fff;
+    }
+
+    .brand-mark svg { width: 18px; }
+
+    .sound-toggle {
+      width: 38px;
+      aspect-ratio: 1;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: rgba(255,255,255,.76);
+      background: var(--glass);
+      backdrop-filter: blur(16px);
+      cursor: pointer;
+    }
+
+    .sound-toggle svg { width: 17px; }
+    .sound-toggle .sound-off { display: none; }
+    .sound-toggle.is-muted .sound-on { display: none; }
+    .sound-toggle.is-muted .sound-off { display: block; }
+
+    header {
+      padding: clamp(32px, 6.5svh, 66px) 22px 26px;
+      text-align: center;
+      animation: rise .65s .06s both;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: #66e2c9;
+      font-family: ui-monospace, "Cascadia Mono", monospace;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .eyebrow::before {
+      content: "◉";
+      margin-right: 7px;
+      color: #ffca55;
+      text-shadow: 0 0 9px rgba(255,202,85,.7);
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "Arial Rounded MT Bold", "YouYuan", "PingFang SC", sans-serif;
+      font-size: clamp(34px, 9.4vw, 54px);
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 11px auto 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .machine {
+      position: relative;
+      animation: rise .7s .13s both;
+    }
+
+    .machine::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 32px;
+      z-index: -1;
+      width: min(72vw, 520px);
+      aspect-ratio: 1;
+      border: 1px solid rgba(76, 225, 205, .1);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 0 38px rgba(65, 155, 213, .025), 0 0 0 86px rgba(65, 155, 213, .02);
+    }
+
+    .machine-label {
+      width: calc(100% - 40px);
+      margin: 0 auto 9px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: rgba(255,255,255,.48);
+      font-family: ui-monospace, "Cascadia Mono", monospace;
+      font-size: 9px;
+    }
+
+    .live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #63ead2;
+    }
+
+    .live::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 0 4px rgba(99, 234, 210, .1), 0 0 10px currentColor;
+      animation: blink 1.6s ease-in-out infinite;
+    }
+
+    .reel-shell {
+      position: relative;
+      width: 100%;
+      height: clamp(180px, 47vw, 222px);
+      border-top: 1px solid rgba(255,255,255,.16);
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(79, 221, 203, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79, 221, 203, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(3,11,19,.96), transparent 17%, transparent 83%, rgba(3,11,19,.96)),
+        linear-gradient(180deg, rgba(19,54,78,.78), rgba(5,18,29,.8));
+      background-size: 24px 24px, 24px 24px, auto, auto;
+      box-shadow: inset 0 20px 45px rgba(0,0,0,.26), inset 0 -16px 42px rgba(0,0,0,.2), 0 18px 55px rgba(0,0,0,.22);
+      backdrop-filter: blur(14px);
+      isolation: isolate;
+    }
+
+    .reel-shell::before,
+    .reel-shell::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      z-index: 5;
+      width: 13%;
+      pointer-events: none;
+    }
+
+    .reel-shell::before { left: 0; background: linear-gradient(90deg, #06111d, transparent); }
+    .reel-shell::after { right: 0; background: linear-gradient(-90deg, #071a25, transparent); }
+
+    .scan-sweep {
+      position: absolute;
+      inset: 0 auto 0 -18%;
+      z-index: 7;
+      width: 15%;
+      opacity: 0;
+      background: linear-gradient(90deg, transparent, rgba(83, 242, 216, .06), rgba(131, 255, 234, .5), transparent);
+      filter: blur(2px);
+      pointer-events: none;
+    }
+
+    .machine.is-spinning .scan-sweep {
+      opacity: 1;
+      animation: scanSweep .72s linear infinite;
+    }
+
+    .track {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      height: calc(100% - 30px);
+      display: flex;
+      align-items: center;
+      gap: var(--item-gap);
+      padding: 0;
+      transform: translate3d(0, -50%, 0);
+      will-change: transform;
+      backface-visibility: hidden;
+    }
+
+    .track.is-spinning {
+      transition: transform var(--reel-time) cubic-bezier(.1, .85, .25, 1);
+    }
+
+    .prize {
+      --rarity: #56b7ff;
+      --soft: #b8e0ff;
+      position: relative;
+      flex: 0 0 var(--item-width);
+      width: var(--item-width);
+      aspect-ratio: .82 / 1;
+      padding: 10px 9px 9px;
+      border: 1px solid color-mix(in srgb, var(--rarity) 58%, rgba(255,255,255,.18));
+      border-radius: 8px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 76% 12%, color-mix(in srgb, var(--rarity) 27%, transparent), transparent 45%),
+        linear-gradient(145deg, rgba(255,255,255,.14), rgba(255,255,255,.045));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 10px 28px rgba(0,0,0,.22);
+      transform: translateZ(0) scale(.92);
+      transition: transform .14s ease, opacity .2s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .prize::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(112deg, transparent 20%, rgba(255,255,255,.14) 46%, transparent 67%);
+      transform: translateX(-120%);
+    }
+
+    .prize.is-near {
+      z-index: 2;
+      transform: translateZ(0) scale(1.04);
+      border-color: var(--rarity);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--rarity) 50%, transparent), 0 0 28px color-mix(in srgb, var(--rarity) 34%, transparent), 0 14px 34px rgba(0,0,0,.25);
+    }
+
+    .prize.is-near::before { animation: sheen .5s ease-out; }
+
+    .prize.is-winner {
+      z-index: 4;
+      transform: translateZ(0) scale(1.09);
+      border-color: #fff;
+      box-shadow: 0 0 0 2px var(--rarity), 0 0 44px color-mix(in srgb, var(--rarity) 58%, transparent), 0 18px 38px rgba(0,0,0,.32);
+      animation: winnerPulse .72s ease-in-out 2;
+    }
+
+    .prize-art {
+      height: 72%;
+      display: grid;
+      place-items: center;
+    }
+
+    .prize-art svg {
+      width: 88%;
+      overflow: visible;
+      filter: drop-shadow(0 14px 10px rgba(0,0,0,.24));
+    }
+
+    .prize-info {
+      position: relative;
+      width: 100%;
+      min-height: 35px;
+      padding: 8px 8px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 6px;
+      background: linear-gradient(180deg, rgba(3,10,18,.28), rgba(3,10,18,.74));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+
+    .prize-name {
+      display: block;
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.2;
+      text-overflow: ellipsis;
+      text-shadow: 0 2px 8px rgba(0,0,0,.72), 0 0 12px color-mix(in srgb, var(--rarity) 24%, transparent);
+      white-space: nowrap;
+    }
+
+    .rarity {
+      position: absolute;
+      right: 3px;
+      top: -8px;
+      padding: 2px 4px;
+      border: 1px solid color-mix(in srgb, var(--rarity) 42%, transparent);
+      border-radius: 4px;
+      color: var(--rarity);
+      background: rgba(4,12,20,.88);
+      box-shadow: 0 0 10px color-mix(in srgb, var(--rarity) 18%, transparent);
+      font-size: 7px;
+      font-weight: 800;
+    }
+
+    .target-lock {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 8;
+      width: calc(var(--item-width) + 18px);
+      height: calc(100% - 14px);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .target-lock::before,
+    .target-lock::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      z-index: -1;
+      transform: translateX(-50%);
+    }
+
+    .target-lock::before {
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: linear-gradient(transparent, #ffda66 20%, #fff 50%, #ffda66 80%, transparent);
+      box-shadow: 0 0 9px #ffcf4e;
+    }
+
+    .target-lock::after {
+      top: 50%;
+      width: 32px;
+      aspect-ratio: 1;
+      border: 1px solid rgba(255, 218, 102, .78);
+      border-radius: 50%;
+      box-shadow: 0 0 16px rgba(255, 207, 78, .34), inset 0 0 12px rgba(255, 207, 78, .15);
+      transform: translate(-50%, -50%);
+    }
+
+    .lock-corner {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-color: #ffda66;
+      filter: drop-shadow(0 0 5px rgba(255, 207, 78, .65));
+      transition: inset .45s var(--spring), transform .45s var(--spring);
+    }
+
+    .lock-corner:nth-child(1) { left: 0; top: 0; border-left: 3px solid #ffda66; border-top: 3px solid #ffda66; }
+    .lock-corner:nth-child(2) { right: 0; top: 0; border-right: 3px solid #ffda66; border-top: 3px solid #ffda66; }
+    .lock-corner:nth-child(3) { right: 0; bottom: 0; border-right: 3px solid #ffda66; border-bottom: 3px solid #ffda66; }
+    .lock-corner:nth-child(4) { left: 0; bottom: 0; border-left: 3px solid #ffda66; border-bottom: 3px solid #ffda66; }
+
+    .lock-label {
+      position: absolute;
+      left: 50%;
+      top: 8px;
+      padding: 3px 7px;
+      color: #ffdf80;
+      background: rgba(4, 16, 26, .86);
+      font-family: ui-monospace, "Cascadia Mono", monospace;
+      font-size: 7px;
+      font-weight: 800;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .machine.is-spinning .target-lock { animation: targetScan .3s ease-in-out infinite alternate; }
+    .machine.is-locked .target-lock { animation: lockConfirm .65s ease-out 2; }
+    .machine.is-locked .lock-corner:nth-child(1) { left: 12px; top: 12px; }
+    .machine.is-locked .lock-corner:nth-child(2) { right: 12px; top: 12px; }
+    .machine.is-locked .lock-corner:nth-child(3) { right: 12px; bottom: 12px; }
+    .machine.is-locked .lock-corner:nth-child(4) { left: 12px; bottom: 12px; }
+
+    .controls {
+      padding: 24px 22px 0;
+      text-align: center;
+      animation: rise .7s .19s both;
+    }
+
+    .start-button {
+      position: relative;
+      width: min(100%, 330px);
+      min-height: 58px;
+      padding: 0 22px;
+      border: 1px solid rgba(255,255,255,.5);
+      border-radius: 8px;
+      overflow: hidden;
+      color: #07151f;
+      background: linear-gradient(135deg, #8df7e2 0%, #51d8db 50%, #5caaf1 100%);
+      box-shadow: 0 8px 0 #166f87, 0 18px 38px rgba(72, 205, 218, .25), inset 0 1px 0 #fff;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform .2s var(--spring), filter .2s ease, opacity .3s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .start-button::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 26%, rgba(255,255,255,.55), transparent 58%);
+      transform: translateX(-120%);
+      animation: buttonShine 2.8s ease-in-out infinite;
+    }
+
+    .start-button:hover { filter: brightness(1.06); transform: translateY(-2px); }
+    .start-button:active { transform: translateY(5px) scale(.98); box-shadow: 0 3px 0 #166f87, 0 10px 20px rgba(72, 205, 218, .2); }
+    .start-button:disabled { cursor: default; opacity: .62; transform: translateY(5px); box-shadow: 0 3px 0 #15536b; }
+
+    .start-button.is-claimed {
+      color: #efffff;
+      background: linear-gradient(135deg, rgba(67,215,182,.42), rgba(59,137,199,.48));
+      box-shadow: 0 7px 0 #164d64, 0 16px 34px rgba(44, 178, 190, .18), inset 0 1px 0 rgba(255,255,255,.32);
+    }
+
+    .start-icon {
+      display: inline-flex;
+      margin-right: 8px;
+      vertical-align: -2px;
+    }
+
+    .start-icon svg { width: 18px; }
+
+    .hint {
+      min-height: 19px;
+      margin: 17px 0 0;
+      color: rgba(255,255,255,.48);
+      font-size: 10px;
+    }
+
+    .hint strong { color: #6ee7cd; }
+
+    .status-row {
+      margin-top: auto;
+      padding: 28px 22px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: rgba(255,255,255,.34);
+      font-family: ui-monospace, "Cascadia Mono", monospace;
+      font-size: 8px;
+    }
+
+    .status-row span:last-child { color: #6ee7cd; }
+
+    .celebration {
+      position: fixed;
+      inset: 0;
+      z-index: 29;
+      overflow: hidden;
+      pointer-events: none;
+      visibility: hidden;
+    }
+
+    .celebration.is-active { visibility: visible; }
+
+    .celebration::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 22px;
+      aspect-ratio: 1;
+      border: 8px solid var(--winner-color, #ffcc64);
+      border-radius: 50%;
+      opacity: 0;
+    }
+
+    .celebration.is-active::before { animation: blastRing .9s ease-out both; }
+
+    .ray {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 3px;
+      height: 46vh;
+      border-radius: 999px;
+      background: linear-gradient(transparent, var(--winner-color), transparent);
+      opacity: 0;
+      transform-origin: center top;
+      transform: rotate(var(--angle));
+      animation: rayFlash .8s ease-out both;
+    }
+
+    .confetti {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: var(--size);
+      height: calc(var(--size) * .45);
+      border-radius: 2px;
+      background: var(--color);
+      opacity: 0;
+      animation: confettiFly 1.15s var(--spring) var(--delay) both;
+    }
+
+    .result {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: grid;
+      place-items: center;
+      padding: max(24px, env(safe-area-inset-top)) 22px max(24px, env(safe-area-inset-bottom));
+      visibility: hidden;
+      overflow: hidden;
+    }
+
+    .result.is-visible { visibility: visible; }
+
+    .result-backdrop {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--winner-color) 32%, transparent), transparent 38%),
+        rgba(9, 10, 17, .88);
+      opacity: 0;
+      backdrop-filter: blur(0);
+      transition: opacity .4s ease, backdrop-filter .5s ease;
+    }
+
+    .result.is-visible .result-backdrop { opacity: 1; backdrop-filter: blur(18px); }
+
+    .result-card {
+      position: relative;
+      width: min(100%, 370px);
+      text-align: center;
+      opacity: 0;
+      transform: translateY(22px) scale(.88);
+      transition: opacity .36s ease, transform .58s var(--spring);
+    }
+
+    .result.is-visible .result-card { opacity: 1; transform: translateY(0) scale(1); }
+
+    .result-orbit {
+      position: relative;
+      width: 190px;
+      aspect-ratio: 1;
+      margin: 0 auto 16px;
+      display: grid;
+      place-items: center;
+    }
+
+    .result-orbit::before,
+    .result-orbit::after {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border: 1px solid color-mix(in srgb, var(--winner-color) 66%, transparent);
+      border-radius: 50%;
+      animation: orbitSpin 9s linear infinite;
+    }
+
+    .result-orbit::after {
+      inset: 20px;
+      border-style: dashed;
+      animation-direction: reverse;
+      animation-duration: 6s;
+    }
+
+    .result-art {
+      position: relative;
+      z-index: 2;
+      width: 142px;
+      filter: drop-shadow(0 22px 22px rgba(0,0,0,.3));
+      animation: resultFloat 2.8s ease-in-out infinite;
+    }
+
+    .result-label {
+      margin: 0 0 8px;
+      color: var(--winner-color);
+      font-family: ui-monospace, "Cascadia Mono", monospace;
+      font-size: 9px;
+      font-weight: 800;
+    }
+
+    .result h2 {
+      margin: 0;
+      font-family: "Arial Rounded MT Bold", "YouYuan", "PingFang SC", sans-serif;
+      font-size: clamp(30px, 9vw, 40px);
+      letter-spacing: 0;
+    }
+
+    .result-name {
+      margin: 10px 0 0;
+      color: var(--winner-color);
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .result-copy {
+      margin: 7px 0 16px;
+      color: rgba(255,255,255,.65);
+      font-size: 13px;
+    }
+
+    .capture-ticket {
+      width: min(100%, 330px);
+      margin: 0 auto 14px;
+      padding: 13px 14px;
+      border: 1px solid color-mix(in srgb, var(--winner-color) 55%, rgba(255,255,255,.22));
+      border-radius: 8px;
+      display: grid;
+      grid-template-columns: 39px minmax(0, 1fr);
+      align-items: center;
+      gap: 11px;
+      text-align: left;
+      background:
+        linear-gradient(90deg, color-mix(in srgb, var(--winner-color) 10%, transparent), rgba(255,255,255,.07)),
+        rgba(5, 13, 22, .64);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 10px 28px rgba(0,0,0,.16);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity .38s .48s ease, transform .5s .48s var(--spring);
+    }
+
+    .result.is-visible .capture-ticket { opacity: 1; transform: translateY(0); }
+
+    .capture-icon {
+      width: 39px;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: #07131f;
+      background: var(--winner-color);
+      box-shadow: 0 0 18px color-mix(in srgb, var(--winner-color) 38%, transparent);
+    }
+
+    .capture-icon svg { width: 21px; }
+    .result.is-visible .capture-icon { animation: cameraPulse 1.2s .75s ease-in-out 2; }
+
+    .capture-title {
+      display: block;
+      margin-bottom: 3px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .capture-copy {
+      display: block;
+      color: rgba(255,255,255,.62);
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .capture-copy strong { color: var(--winner-color); }
+
+    .again-button {
+      width: min(100%, 310px);
+      min-height: 50px;
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 8px;
+      color: #fff;
+      background: rgba(255,255,255,.1);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+      backdrop-filter: blur(14px);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .18s ease, background .18s ease;
+    }
+
+    .again-button:hover { background: rgba(255,255,255,.16); }
+    .again-button:active { transform: scale(.97); }
+
+    .particle-field { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+
+    .float-particle {
+      position: absolute;
+      left: var(--left);
+      bottom: -20px;
+      width: var(--size);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--winner-color);
+      box-shadow: 0 0 12px var(--winner-color);
+      opacity: 0;
+      animation: particleUp var(--duration) var(--delay) linear infinite;
+    }
+
+    @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes starDrift { to { transform: translateY(84px); } }
+    @keyframes aurora { from { transform: rotate(-7deg) scale(.9); } to { transform: rotate(8deg) scale(1.08); } }
+    @keyframes blink { 50% { opacity: .35; } }
+    @keyframes sheen { from { transform: translateX(-120%); } to { transform: translateX(120%); } }
+    @keyframes pointerHum { from { filter: brightness(1); } to { filter: brightness(1.7); } }
+    @keyframes scanSweep { from { transform: translate3d(0,0,0); } to { transform: translate3d(780%,0,0); } }
+    @keyframes targetScan { from { filter: brightness(.85); } to { filter: brightness(1.55); } }
+    @keyframes lockConfirm { 0% { transform: translate(-50%,-50%) scale(1.08); filter: brightness(1); } 45% { transform: translate(-50%,-50%) scale(.91); filter: brightness(1.8); } 100% { transform: translate(-50%,-50%) scale(1); filter: brightness(1.1); } }
+    @keyframes cameraPulse { 50% { transform: scale(1.1); filter: brightness(1.35); box-shadow: 0 0 26px color-mix(in srgb, var(--winner-color) 62%, transparent); } }
+    @keyframes buttonShine { 0%, 54% { transform: translateX(-120%); } 84%, 100% { transform: translateX(120%); } }
+    @keyframes winnerPulse { 50% { transform: translateZ(0) scale(1.16); filter: brightness(1.3); } }
+    @keyframes blastRing { 0% { opacity: .9; transform: translate(-50%,-50%) scale(.2); } 100% { opacity: 0; transform: translate(-50%,-50%) scale(35); } }
+    @keyframes rayFlash { 0% { opacity: 0; scale: .3 0; } 22% { opacity: .8; } 100% { opacity: 0; scale: 1 1; } }
+    @keyframes confettiFly { 0% { opacity: 0; transform: translate(-50%,-50%) scale(.2); } 18%,65% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(var(--rotate)); } }
+    @keyframes orbitSpin { to { transform: rotate(360deg); } }
+    @keyframes resultFloat { 50% { transform: translateY(-9px) rotate(1deg); } }
+    @keyframes particleUp { 0% { opacity: 0; transform: translateY(0) scale(.6); } 15% { opacity: .7; } 100% { opacity: 0; transform: translateY(-110vh) scale(1.2); } }
+
+    @media (max-height: 720px) {
+      header { padding-top: 22px; padding-bottom: 18px; }
+      h1 { font-size: 32px; }
+      .reel-shell { height: 174px; }
+      .controls { padding-top: 18px; }
+      .start-button { min-height: 52px; }
+      .status-row { padding-top: 18px; }
+      .result-orbit { width: 154px; margin-bottom: 8px; }
+      .result-art { width: 116px; }
+      .result h2 { font-size: 29px; }
+      .result-name { margin-top: 6px; }
+      .result-copy { margin-bottom: 10px; }
+      .capture-ticket { padding: 10px 12px; margin-bottom: 10px; }
+      .again-button { min-height: 46px; }
+    }
+
+    @media (min-width: 720px) {
+      .reel-shell { border: 1px solid rgba(255,255,255,.12); border-radius: 8px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+      .track.is-spinning { transition-duration: .8s; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sky" aria-hidden="true"></div>
+
+  <main class="app">
+    <nav class="topbar" aria-label="应用控制">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5c3.7 2.6 6 6.2 6 10.4L12 21l-6-7.1c0-4.2 2.3-7.8 6-10.4Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="11" r="2.4" stroke="currentColor" stroke-width="1.7"/><path d="m6.4 13.2-3 2.2 3.4 1.2M17.6 13.2l3 2.2-3.4 1.2M10 19h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        编程猫惊喜盲盒
+      </div>
+      <button class="sound-toggle is-muted" id="soundToggle" type="button" aria-label="开启音效" title="开启音效">
+        <svg class="sound-on" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M11 5 6.5 9H3v6h3.5l4.5 4V5ZM15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg class="sound-off" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M11 5 6.5 9H3v6h3.5l4.5 4V5ZM16 9l5 5M21 9l-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </nav>
+
+    <header>
+      <p class="eyebrow">MISSION BC-08 · 礼物探索任务</p>
+      <h1>探索星际目标<br>锁定惊喜礼物</h1>
+      <p class="subtitle">启动飞船扫描器，看看今天会发现哪份神秘礼物。</p>
+    </header>
+
+    <section class="machine" id="machine" aria-label="盲盒抽选传送带">
+      <div class="machine-label"><span>DEEP SPACE SCANNER / 08</span><span class="live" id="machineStatus">待命</span></div>
+      <div class="reel-shell" id="reelShell">
+        <div class="track" id="track"></div>
+        <div class="scan-sweep" aria-hidden="true"></div>
+        <div class="target-lock" aria-hidden="true">
+          <i class="lock-corner"></i><i class="lock-corner"></i><i class="lock-corner"></i><i class="lock-corner"></i>
+          <span class="lock-label" id="lockLabel">TARGET AREA</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="controls">
+      <button class="start-button" id="startButton" type="button">
+        <span class="start-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="7.5" stroke="currentColor" stroke-width="2"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        <span id="startText">启动目标扫描</span>
+      </button>
+      <p class="hint" id="hint">每位用户仅可抽取 <strong>1 次</strong>，结果将自动保存</p>
+    </section>
+
+    <footer class="status-row"><span>SPACE MISSION · AFTER CLASS</span><span>● NAVIGATION ONLINE</span></footer>
+  </main>
+
+  <div class="celebration" id="celebration" aria-hidden="true"></div>
+
+  <section class="result" id="result" aria-hidden="true">
+    <div class="result-backdrop"></div>
+    <div class="particle-field" id="particleField" aria-hidden="true"></div>
+    <div class="result-card" role="dialog" aria-modal="true" aria-labelledby="resultTitle" aria-describedby="resultCopy">
+      <div class="result-orbit"><div class="result-art" id="resultArt" aria-hidden="true"></div></div>
+      <p class="result-label" id="resultLabel">TARGET LOCKED · RARE</p>
+      <h2 id="resultTitle">目标礼物已锁定 ✨</h2>
+      <p class="result-name" id="resultName">星光旅行家</p>
+      <p class="result-copy" id="resultCopy">截图保存，课后寻找老师兑换</p>
+      <div class="capture-ticket" aria-label="截图兑换提醒">
+        <span class="capture-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 8.5h3l1.6-2.2h6.8L17 8.5h3v10H4v-10Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.5" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
+        </span>
+        <span>
+          <strong class="capture-title">请截图保存兑换凭证</strong>
+          <span class="capture-copy">保存当前页面，课后向老师出示截图，兑换 <strong id="ticketPrizeName">星光旅行家</strong></span>
+        </span>
+      </div>
+      <button class="again-button" id="againButton" type="button">返回探索舱</button>
+    </div>
+  </section>
+
+  <script>
+    const prizes = [
+      { name: '珊瑚信号', rarity: '闪耀', color: '#ff705f', soft: '#ffc2b9', pattern: 'planet' },
+      { name: '晴空飞船', rarity: '稀有', color: '#58b9ff', soft: '#b9e2ff', pattern: 'rocket' },
+      { name: '柠檬唱片', rarity: '奇趣', color: '#d9e83e', soft: '#f2f7a8', pattern: 'sun' },
+      { name: '莓果轨迹', rarity: '闪耀', color: '#ed79b2', soft: '#f8bfdb', pattern: 'rainbow' },
+      { name: '薄荷方程', rarity: '珍藏', color: '#43d7b6', soft: '#aef0df', pattern: 'blocks' },
+      { name: '橘子频道', rarity: '奇趣', color: '#ffad4d', soft: '#ffd29e', pattern: 'bolt' },
+      { name: '银色月球', rarity: '稀有', color: '#b7c2d5', soft: '#e4e9f1', pattern: 'moon' },
+      { name: '午夜星愿', rarity: '传说', color: '#a990ff', soft: '#d5c9ff', pattern: 'star' }
+    ];
+
+    const patterns = {
+      planet: '<circle cx="84" cy="63" r="18" fill="var(--rarity)"/><path d="M55 68c13 9 46 3 55-10" stroke="var(--soft)" stroke-width="7" stroke-linecap="round"/>',
+      rocket: '<path d="M79 38c17 12 19 30 8 45L70 66c-5-10-1-21 9-28Z" fill="var(--rarity)"/><path d="m70 66-12 6 10-15M87 83l-6 12-3-17" fill="var(--soft)"/><circle cx="82" cy="54" r="5" fill="#fff"/>',
+      sun: '<circle cx="79" cy="63" r="17" fill="var(--rarity)"/><path d="M79 35v9M79 82v9M51 63h9M98 63h9" stroke="var(--soft)" stroke-width="5" stroke-linecap="round"/>',
+      rainbow: '<path d="M55 76a26 26 0 0 1 52 0" stroke="var(--rarity)" stroke-width="9" fill="none"/><path d="M63 76a18 18 0 0 1 36 0" stroke="var(--soft)" stroke-width="7" fill="none"/>',
+      blocks: '<rect x="55" y="45" width="20" height="20" rx="4" fill="var(--rarity)"/><rect x="81" y="66" width="20" height="20" rx="4" fill="var(--rarity)"/><rect x="81" y="43" width="18" height="17" rx="4" fill="var(--soft)"/>',
+      bolt: '<path d="m86 36-25 32h17l-8 26 30-38H82l4-20Z" fill="var(--rarity)"/>',
+      moon: '<path d="M91 39a27 27 0 1 0 10 43A23 23 0 0 1 91 39Z" fill="var(--rarity)"/><circle cx="59" cy="46" r="4" fill="var(--soft)"/>',
+      star: '<path d="m80 36 8 17 19 2-14 13 4 19-17-9-17 9 4-19-14-13 19-2 8-17Z" fill="var(--rarity)"/>'
+    };
+
+    const track = document.querySelector('#track');
+    const shell = document.querySelector('#reelShell');
+    const machine = document.querySelector('#machine');
+    const startButton = document.querySelector('#startButton');
+    const startText = document.querySelector('#startText');
+    const machineStatus = document.querySelector('#machineStatus');
+    const hint = document.querySelector('#hint');
+    const lockLabel = document.querySelector('#lockLabel');
+    const result = document.querySelector('#result');
+    const resultArt = document.querySelector('#resultArt');
+    const resultName = document.querySelector('#resultName');
+    const resultLabel = document.querySelector('#resultLabel');
+    const ticketPrizeName = document.querySelector('#ticketPrizeName');
+    const againButton = document.querySelector('#againButton');
+    const celebration = document.querySelector('#celebration');
+    const particleField = document.querySelector('#particleField');
+    const soundToggle = document.querySelector('#soundToggle');
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const drawStorageKey = 'bc-surprise-draw-v1';
+
+    let isSpinning = false;
+    let muted = true;
+    let lastCenterIndex = -1;
+    let frameId = 0;
+    let winnerElement = null;
+    let savedPrizeIndex = readSavedPrizeIndex();
+
+    function readSavedPrizeIndex() {
+      try {
+        const storedValue = localStorage.getItem(drawStorageKey);
+        if (storedValue === null) return null;
+        const value = Number(storedValue);
+        return Number.isInteger(value) && value >= 0 && value < prizes.length ? value : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function savePrizeIndex(index) {
+      savedPrizeIndex = index;
+      try { localStorage.setItem(drawStorageKey, String(index)); } catch { /* Storage may be unavailable in private mode. */ }
+    }
+
+    function prizeSvg(prize) {
+      return `<svg viewBox="0 0 150 132" fill="none" style="--rarity:${prize.color};--soft:${prize.soft}">
+        <path d="m32 48 43-23 43 23v57l-43 23-43-23V48Z" fill="rgba(255,255,255,.93)"/>
+        <path d="m32 48 43 24 43-24M75 72v56" stroke="#292637" stroke-width="2.6" stroke-linejoin="round"/>
+        <path d="M32 48 75 25l43 23v57l-43 23-43-23V48Z" stroke="#292637" stroke-width="2.6" stroke-linejoin="round"/>
+        <g clip-path="url(#face)">${patterns[prize.pattern]}</g>
+        <path d="m32 48 43 24v56l-43-23V48Z" fill="var(--soft)" opacity=".65"/>
+        <path d="M48 80v2M61 86v2M50 96c2.5 3 7 3 9.5 0" stroke="#292637" stroke-width="2.8" stroke-linecap="round"/>
+        <defs><clipPath id="face"><path d="m75 72 43-24v57l-43 23V72Z"/></clipPath></defs>
+      </svg>`;
+    }
+
+    function createTrack() {
+      const fragment = document.createDocumentFragment();
+      for (let group = 0; group < 12; group += 1) {
+        prizes.forEach((prize, prizeIndex) => {
+          const item = document.createElement('article');
+          item.className = 'prize';
+          item.dataset.prize = String(prizeIndex);
+          item.style.cssText = `--rarity:${prize.color};--soft:${prize.soft}`;
+          item.innerHTML = `<div class="prize-art">${prizeSvg(prize)}</div><div class="prize-info"><span class="prize-name">${prize.name}</span><span class="rarity">${prize.rarity}</span></div>`;
+          fragment.appendChild(item);
+        });
+      }
+      track.replaceChildren(fragment);
+    }
+
+    function itemCenter(item) {
+      return item.offsetLeft + item.offsetWidth / 2;
+    }
+
+    function centerTrackOn(index, animate = false) {
+      const items = track.children;
+      const item = items[index];
+      if (!item) return;
+      track.classList.toggle('is-spinning', animate);
+      const destination = shell.clientWidth / 2 - itemCenter(item);
+      track.style.transform = `translate3d(${destination}px, -50%, 0)`;
+    }
+
+    function resetTrack() {
+      cancelAnimationFrame(frameId);
+      isSpinning = false;
+      lastCenterIndex = -1;
+      winnerElement = null;
+      track.classList.remove('is-spinning');
+      machine.classList.remove('is-locked');
+      [...track.children].forEach(item => item.classList.remove('is-near', 'is-winner'));
+      const hasDrawn = savedPrizeIndex !== null;
+      const savedTrackIndex = hasDrawn ? prizes.length + savedPrizeIndex : 5;
+      centerTrackOn(savedTrackIndex, false);
+      startButton.disabled = false;
+      startButton.classList.toggle('is-claimed', hasDrawn);
+      startText.textContent = hasDrawn ? '查看我的兑换凭证' : '启动目标扫描';
+      machineStatus.textContent = hasDrawn ? '已完成' : '待命';
+      lockLabel.textContent = hasDrawn ? 'DRAW COMPLETE' : 'TARGET AREA';
+      hint.innerHTML = hasDrawn ? '本用户已完成抽取，<strong>不可重复抽取</strong>' : '每位用户仅可抽取 <strong>1 次</strong>，结果将自动保存';
+      if (hasDrawn) {
+        machine.classList.add('is-locked');
+        const savedItem = track.children[savedTrackIndex];
+        savedItem?.classList.add('is-near', 'is-winner');
+      }
+    }
+
+    function beginSpin() {
+      if (isSpinning) return;
+      if (savedPrizeIndex !== null) {
+        showResult(prizes[savedPrizeIndex]);
+        return;
+      }
+      isSpinning = true;
+      startButton.classList.remove('is-claimed');
+      startButton.disabled = true;
+      startText.textContent = '正在搜索目标…';
+      machineStatus.textContent = '扫描中';
+      lockLabel.textContent = 'SCANNING';
+      hint.textContent = '正在穿越礼物星域，请盯紧中央锁定器';
+      machine.classList.add('is-spinning');
+      [...track.children].forEach(item => item.classList.remove('is-near', 'is-winner'));
+
+      playStartSound();
+      navigator.vibrate?.([30, 35, 55]);
+
+      const winnerPrizeIndex = Math.floor(Math.random() * prizes.length);
+      const winnerTrackIndex = 9 * prizes.length + winnerPrizeIndex;
+      winnerElement = track.children[winnerTrackIndex];
+      const destination = shell.clientWidth / 2 - itemCenter(winnerElement);
+
+      requestAnimationFrame(() => {
+        track.classList.add('is-spinning');
+        track.style.transform = `translate3d(${destination}px, -50%, 0)`;
+        monitorPointer();
+      });
+    }
+
+    function monitorPointer() {
+      if (!isSpinning) return;
+      const matrix = new DOMMatrixReadOnly(getComputedStyle(track).transform);
+      const pointerX = shell.clientWidth / 2;
+      const items = track.children;
+      const step = items[1].offsetLeft - items[0].offsetLeft;
+      const rawIndex = Math.round((pointerX - matrix.m41 - itemCenter(items[0])) / step);
+      const index = Math.max(0, Math.min(items.length - 1, rawIndex));
+
+      if (index !== lastCenterIndex) {
+        if (lastCenterIndex >= 0) items[lastCenterIndex]?.classList.remove('is-near');
+        items[index]?.classList.add('is-near');
+        lastCenterIndex = index;
+        playTickSound();
+        navigator.vibrate?.(8);
+      }
+      frameId = requestAnimationFrame(monitorPointer);
+    }
+
+    function finishSpin() {
+      if (!isSpinning) return;
+      cancelAnimationFrame(frameId);
+      isSpinning = false;
+      machine.classList.remove('is-spinning');
+      machine.classList.add('is-locked');
+      machineStatus.textContent = '目标锁定';
+      lockLabel.textContent = 'TARGET LOCKED';
+      [...track.children].forEach(item => item.classList.remove('is-near'));
+      winnerElement.classList.add('is-near', 'is-winner');
+      const prizeIndex = Number(winnerElement.dataset.prize);
+      const prize = prizes[prizeIndex];
+      savePrizeIndex(prizeIndex);
+      navigator.vibrate?.([60, 45, 90]);
+      playWinSound();
+
+      window.setTimeout(() => showCelebration(prize), 450);
+      window.setTimeout(() => showResult(prize), 1050);
+    }
+
+    function showCelebration(prize) {
+      celebration.style.setProperty('--winner-color', prize.color);
+      const fragment = document.createDocumentFragment();
+      for (let i = 0; i < 18; i += 1) {
+        const ray = document.createElement('i');
+        ray.className = 'ray';
+        ray.style.setProperty('--angle', `${i * 20}deg`);
+        fragment.appendChild(ray);
+      }
+      const palette = [prize.color, prize.soft, '#ffffff', '#ffcf5c', '#54e0c2', '#ff7664'];
+      for (let i = 0; i < 46; i += 1) {
+        const bit = document.createElement('i');
+        const angle = Math.PI * 2 * i / 46 + Math.random() * .18;
+        const distance = 130 + Math.random() * 260;
+        bit.className = 'confetti';
+        bit.style.cssText = `--size:${6 + Math.random() * 9}px;--color:${palette[i % palette.length]};--x:${Math.cos(angle) * distance}px;--y:${Math.sin(angle) * distance}px;--rotate:${Math.random() * 760 - 380}deg;--delay:${Math.random() * .1}s`;
+        fragment.appendChild(bit);
+      }
+      celebration.replaceChildren(fragment);
+      celebration.classList.add('is-active');
+      window.setTimeout(() => {
+        celebration.classList.remove('is-active');
+        celebration.replaceChildren();
+      }, 1400);
+    }
+
+    function showResult(prize) {
+      result.style.setProperty('--winner-color', prize.color);
+      resultArt.innerHTML = prizeSvg(prize);
+      resultName.textContent = prize.name;
+      ticketPrizeName.textContent = prize.name;
+      resultLabel.textContent = `TARGET LOCKED · ${prize.rarity}`;
+      buildParticles();
+      result.classList.add('is-visible');
+      result.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      window.setTimeout(() => againButton.focus(), 120);
+    }
+
+    function buildParticles() {
+      const fragment = document.createDocumentFragment();
+      for (let i = 0; i < 18; i += 1) {
+        const dot = document.createElement('i');
+        dot.className = 'float-particle';
+        dot.style.cssText = `--left:${Math.random() * 100}%;--size:${2 + Math.random() * 5}px;--duration:${4 + Math.random() * 5}s;--delay:${Math.random() * -8}s`;
+        fragment.appendChild(dot);
+      }
+      particleField.replaceChildren(fragment);
+    }
+
+    function closeResult() {
+      result.classList.remove('is-visible');
+      result.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      particleField.replaceChildren();
+      resetTrack();
+      startButton.focus();
+    }
+
+    // 音效接入预留：可将以下函数替换为真实 Audio/Web Audio 素材。
+    function playStartSound() { if (!muted) console.info('[audio] start rumble'); }
+    function playTickSound() { if (!muted) console.info('[audio] pointer tick'); }
+    function playWinSound() { if (!muted) console.info('[audio] winner cheer'); }
+
+    function toggleSound() {
+      muted = !muted;
+      soundToggle.classList.toggle('is-muted', muted);
+      soundToggle.setAttribute('aria-label', muted ? '开启音效' : '关闭音效');
+      soundToggle.title = muted ? '开启音效' : '关闭音效';
+    }
+
+    createTrack();
+    requestAnimationFrame(resetTrack);
+    startButton.addEventListener('click', beginSpin);
+    track.addEventListener('transitionend', event => {
+      if (event.target === track && event.propertyName === 'transform') finishSpin();
+    });
+    againButton.addEventListener('click', closeResult);
+    soundToggle.addEventListener('click', toggleSound);
+    window.addEventListener('resize', () => {
+      if (!isSpinning && !result.classList.contains('is-visible')) centerTrackOn(5, false);
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && result.classList.contains('is-visible')) closeResult();
+      if (event.key === 'Tab' && result.classList.contains('is-visible')) {
+        event.preventDefault();
+        againButton.focus();
+      }
+    });
+  </script>
+</body>
+</html>

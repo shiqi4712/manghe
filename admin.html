@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f6f8">
+  <title>编程猫惊喜盲盒 · 教师管理台</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18202a;
+      --muted: #68717d;
+      --line: #dfe4e8;
+      --soft-line: #edf0f2;
+      --panel: #fff;
+      --page: #f4f6f8;
+      --accent: #087f71;
+      --accent-dark: #05665b;
+      --accent-soft: #e5f5f2;
+      --warning: #a76108;
+      --warning-soft: #fff5df;
+      --danger: #b13b35;
+      --danger-soft: #fceceb;
+      --blue: #286da8;
+      --blue-soft: #eaf3fb;
+      --shadow: 0 12px 34px rgba(24, 32, 42, .08);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--page);
+      font-family: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid rgba(8,127,113,.2); outline-offset: 2px; }
+
+    .shell { min-height: 100vh; display: grid; grid-template-columns: 226px minmax(0, 1fr); }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 20px 14px;
+      color: #e8f0ef;
+      background: #172329;
+      border-right: 1px solid rgba(255,255,255,.05);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand {
+      min-height: 44px;
+      padding: 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .brand-mark {
+      width: 32px;
+      aspect-ratio: 1;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      color: #0d2925;
+      background: #57d6c3;
+      font-family: ui-monospace, monospace;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .workspace {
+      margin: 17px 4px 21px;
+      padding: 11px 12px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 6px;
+      color: #b7c6c5;
+      background: rgba(255,255,255,.035);
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .workspace strong { display: block; color: #fff; font-size: 12px; }
+
+    .nav-label {
+      padding: 0 10px 8px;
+      color: #718581;
+      font-size: 9px;
+      font-weight: 800;
+    }
+
+    .nav { display: grid; gap: 4px; }
+
+    .nav-button {
+      width: 100%;
+      min-height: 39px;
+      padding: 0 11px;
+      border: 0;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #aebcba;
+      background: transparent;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .nav-button:hover { color: #fff; background: rgba(255,255,255,.055); }
+    .nav-button.is-active { color: #fff; background: rgba(87,214,195,.13); box-shadow: inset 2px 0 #57d6c3; }
+    .nav-icon { width: 18px; text-align: center; font-family: ui-monospace, monospace; font-size: 11px; }
+    .nav-count { margin-left: auto; color: #7c918d; font-size: 9px; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 13px 9px 3px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .avatar { width: 30px; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; color: #10211f; background: #d8eeea; font-size: 10px; font-weight: 900; }
+    .admin-name { font-size: 11px; font-weight: 800; }
+    .admin-role { color: #7f918f; font-size: 9px; }
+
+    .main { min-width: 0; }
+
+    .topbar {
+      height: 64px;
+      padding: 0 28px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255,255,255,.88);
+      backdrop-filter: blur(14px);
+    }
+
+    .breadcrumb { color: var(--muted); font-size: 11px; }
+    .breadcrumb strong { color: var(--ink); }
+
+    .db-status { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-family: ui-monospace, monospace; font-size: 9px; }
+    .db-dot { width: 7px; height: 7px; border-radius: 50%; background: #20a17e; box-shadow: 0 0 0 4px rgba(32,161,126,.1); }
+
+    .content { padding: 28px; }
+
+    .page-header { display: flex; align-items: end; justify-content: space-between; gap: 18px; }
+    h1 { margin: 0; font-size: 24px; line-height: 1.2; letter-spacing: 0; }
+    .page-desc { margin: 7px 0 0; color: var(--muted); font-size: 11px; }
+
+    .actions { display: flex; gap: 8px; }
+    .button { min-height: 38px; padding: 0 13px; border: 1px solid var(--line); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; color: var(--ink); background: #fff; font-size: 11px; font-weight: 800; white-space: nowrap; }
+    .button:hover { border-color: #c5cdd2; background: #fafbfb; }
+    .button.primary { border-color: var(--accent); color: #fff; background: var(--accent); }
+    .button.primary:hover { background: var(--accent-dark); }
+    .button.danger { border-color: #ecc8c5; color: var(--danger); background: var(--danger-soft); }
+    .button.small { min-height: 30px; padding: 0 9px; font-size: 10px; }
+    .button.icon-only { width: 32px; min-height: 32px; padding: 0; }
+    .button:disabled { opacity: .45; cursor: default; }
+
+    .stats {
+      margin: 25px 0 20px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .stat { min-width: 0; padding: 17px 19px; border-right: 1px solid var(--line); }
+    .stat:last-child { border-right: 0; }
+    .stat-label { color: var(--muted); font-size: 10px; }
+    .stat-value { margin-top: 5px; font-size: 23px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .stat-note { margin-left: 5px; color: #83909a; font-size: 9px; font-weight: 600; }
+
+    .workspace-panel { border: 1px solid var(--line); border-radius: 7px; background: var(--panel); box-shadow: 0 4px 15px rgba(24,32,42,.025); overflow: hidden; }
+
+    .toolbar { padding: 13px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .filters { display: flex; gap: 8px; min-width: 0; }
+    .search { position: relative; width: min(300px, 32vw); }
+    .search::before { content: "⌕"; position: absolute; left: 11px; top: 50%; color: #84909a; font-size: 16px; transform: translateY(-54%); pointer-events: none; }
+    .control { height: 36px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: #fff; font-size: 11px; }
+    input.control { width: 100%; padding: 0 11px 0 32px; }
+    select.control { padding: 0 27px 0 10px; }
+    textarea.control { height: auto; padding: 10px 11px; resize: vertical; line-height: 1.6; }
+
+    .result-count { color: var(--muted); font-size: 10px; white-space: nowrap; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; min-width: 850px; border-collapse: collapse; table-layout: fixed; }
+    th { height: 38px; padding: 0 13px; border-bottom: 1px solid var(--line); color: #77818b; background: #fafbfc; text-align: left; font-size: 9px; font-weight: 800; }
+    td { height: 58px; padding: 8px 13px; border-bottom: 1px solid var(--soft-line); font-size: 11px; vertical-align: middle; }
+    tbody tr:hover { background: #fafcfb; }
+    tbody tr:last-child td { border-bottom: 0; }
+    .checkbox-col { width: 38px; text-align: center; }
+    input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--accent); }
+
+    .student-cell { display: flex; align-items: center; gap: 9px; min-width: 0; }
+    .student-avatar { flex: none; width: 30px; aspect-ratio: 1; border-radius: 7px; display: grid; place-items: center; color: #176d62; background: var(--accent-soft); font-size: 10px; font-weight: 900; }
+    .student-name { overflow: hidden; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+    .student-class { margin-top: 2px; color: #869099; font-size: 9px; }
+    .id-code { color: #3f4953; font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 10px; }
+
+    .badge { min-height: 22px; padding: 0 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px; font-size: 9px; font-weight: 800; white-space: nowrap; }
+    .badge::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .badge.ready { color: var(--accent); background: var(--accent-soft); }
+    .badge.drawn { color: var(--blue); background: var(--blue-soft); }
+    .badge.redeemed { color: #5b6670; background: #eef1f3; }
+    .badge.disabled { color: var(--warning); background: var(--warning-soft); }
+
+    .prize-name { font-weight: 800; }
+    .prize-empty { color: #a0a8ae; }
+    .time { color: #69747e; font-size: 10px; font-variant-numeric: tabular-nums; }
+
+    .row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 5px; }
+    .action-menu { position: relative; }
+    .menu { position: fixed; z-index: 20; width: 166px; padding: 5px; border: 1px solid var(--line); border-radius: 7px; background: #fff; box-shadow: var(--shadow); display: none; }
+    .menu.is-open { display: block; }
+    .menu button { width: 100%; min-height: 33px; padding: 0 9px; border: 0; border-radius: 4px; display: flex; align-items: center; color: #39434d; background: transparent; text-align: left; font-size: 10px; }
+    .menu button:hover { background: #f3f6f7; }
+    .menu button.danger-text { color: var(--danger); }
+    .menu-separator { height: 1px; margin: 4px; background: var(--soft-line); }
+
+    .empty { padding: 48px 20px; color: var(--muted); text-align: center; font-size: 11px; }
+    .empty strong { display: block; margin-bottom: 5px; color: var(--ink); font-size: 13px; }
+
+    .panel-footer { min-height: 48px; padding: 0 13px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 9px; }
+    .pagination { display: flex; gap: 4px; }
+    .page-button { width: 28px; aspect-ratio: 1; border: 1px solid var(--line); border-radius: 5px; color: #4e5963; background: #fff; font-size: 10px; }
+    .page-button.is-current { color: #fff; border-color: var(--accent); background: var(--accent); }
+
+    .view { display: none; }
+    .view.is-active { display: block; }
+
+    .log-list { margin: 20px 0 0; border: 1px solid var(--line); border-radius: 7px; background: #fff; overflow: hidden; }
+    .log-row { min-height: 58px; padding: 11px 15px; border-bottom: 1px solid var(--soft-line); display: grid; grid-template-columns: 150px 100px 1fr 140px; align-items: center; gap: 12px; font-size: 10px; }
+    .log-row:last-child { border-bottom: 0; }
+    .log-action { font-weight: 800; }
+    .log-detail { color: #5f6973; }
+    .log-time { color: #89929a; font-variant-numeric: tabular-nums; }
+
+    .prize-grid { margin-top: 20px; display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+    .prize-item { min-height: 126px; padding: 15px; border: 1px solid var(--line); border-radius: 7px; background: #fff; }
+    .prize-swatch { width: 28px; height: 5px; margin-bottom: 16px; border-radius: 999px; background: var(--prize-color); }
+    .prize-title { font-size: 13px; font-weight: 900; }
+    .prize-meta { margin-top: 5px; color: var(--muted); font-size: 9px; }
+    .prize-total { margin-top: 19px; display: flex; align-items: end; justify-content: space-between; }
+    .prize-total strong { font-size: 20px; }
+
+    .modal-backdrop { position: fixed; inset: 0; z-index: 40; padding: 20px; display: grid; place-items: center; background: rgba(18,25,31,.38); backdrop-filter: blur(4px); opacity: 0; visibility: hidden; transition: opacity .2s ease; }
+    .modal-backdrop.is-visible { opacity: 1; visibility: visible; }
+    .modal { width: min(100%, 450px); border: 1px solid rgba(255,255,255,.65); border-radius: 8px; background: #fff; box-shadow: 0 24px 80px rgba(21,30,38,.22); transform: translateY(10px) scale(.98); transition: transform .25s ease; }
+    .modal-backdrop.is-visible .modal { transform: translateY(0) scale(1); }
+    .modal-header { min-height: 58px; padding: 0 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-size: 14px; font-weight: 900; }
+    .close { width: 30px; aspect-ratio: 1; border: 0; border-radius: 5px; color: #6f7880; background: transparent; font-size: 18px; }
+    .close:hover { background: #f1f3f4; }
+    .modal-body { padding: 18px; }
+    .field { margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+    .field label { display: block; margin-bottom: 6px; color: #525d66; font-size: 10px; font-weight: 800; }
+    .field .control { width: 100%; padding: 0 10px; }
+    .field textarea.control { padding: 10px; }
+    .field-note { margin-top: 6px; color: #8a939b; font-size: 9px; line-height: 1.5; }
+    .modal-footer { min-height: 62px; padding: 0 18px; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+    .warning-box { padding: 12px; border: 1px solid #efd7a8; border-radius: 6px; color: #724b12; background: var(--warning-soft); font-size: 10px; line-height: 1.6; }
+
+    .toast { position: fixed; right: 22px; bottom: 22px; z-index: 60; min-width: 250px; max-width: 360px; padding: 12px 14px; border: 1px solid rgba(255,255,255,.15); border-radius: 7px; color: #fff; background: #203138; box-shadow: var(--shadow); font-size: 10px; opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity .2s ease, transform .25s ease; }
+    .toast.is-visible { opacity: 1; transform: translateY(0); }
+    .toast strong { display: block; margin-bottom: 3px; font-size: 11px; }
+
+    @media (max-width: 900px) {
+      .shell { grid-template-columns: 68px minmax(0,1fr); }
+      .sidebar { padding-inline: 9px; }
+      .brand { padding: 0; justify-content: center; }
+      .brand > span:last-child, .workspace, .nav-label, .nav-button > span:not(.nav-icon):not(.nav-count), .sidebar-footer > div:not(.avatar) { display: none; }
+      .nav-button { justify-content: center; padding: 0; }
+      .nav-count { display: none; }
+      .sidebar-footer { justify-content: center; padding-inline: 0; }
+      .content { padding: 22px 18px; }
+      .stats { grid-template-columns: repeat(2,1fr); }
+      .stat:nth-child(2) { border-right: 0; }
+      .stat:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .prize-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      .shell { display: block; }
+      .sidebar { position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 30; width: 100%; height: 62px; padding: 6px 10px max(6px,env(safe-area-inset-bottom)); flex-direction: row; }
+      .brand, .workspace, .nav-label, .sidebar-footer { display: none; }
+      .nav { width: 100%; grid-template-columns: repeat(3,1fr); }
+      .nav-button { min-height: 45px; flex-direction: column; gap: 2px; font-size: 8px; }
+      .nav-button > span:not(.nav-count) { display: inline; }
+      .nav-icon { font-size: 9px; }
+      .main { padding-bottom: 70px; }
+      .topbar { height: 54px; padding: 0 15px; }
+      .content { padding: 18px 13px; }
+      .page-header { align-items: flex-start; flex-direction: column; }
+      .actions { width: 100%; }
+      .actions .button { flex: 1; }
+      .stats { margin-top: 18px; }
+      .stat { padding: 13px; }
+      .stat-value { font-size: 20px; }
+      .toolbar { align-items: stretch; flex-direction: column; }
+      .filters { display: grid; grid-template-columns: repeat(2,1fr); }
+      .search { width: auto; grid-column: 1/-1; }
+      .result-count { text-align: right; }
+      .prize-grid { grid-template-columns: 1fr; }
+      .log-row { grid-template-columns: 95px 1fr; }
+      .log-row > :nth-child(3), .log-row > :nth-child(4) { grid-column: 2; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">BC</span><span>惊喜盲盒管理台</span></div>
+      <div class="workspace"><strong>第二课后活动</strong>2026 夏季 · 编程猫校区</div>
+      <div class="nav-label">管理</div>
+      <nav class="nav" aria-label="管理导航">
+        <button class="nav-button is-active" data-view="students"><span class="nav-icon">ID</span><span>学员与资格</span><span class="nav-count" id="studentNavCount">0</span></button>
+        <button class="nav-button" data-view="prizes"><span class="nav-icon">□</span><span>礼物统计</span></button>
+        <button class="nav-button" data-view="logs"><span class="nav-icon">↺</span><span>操作日志</span></button>
+      </nav>
+      <div class="sidebar-footer"><div class="avatar">林</div><div><div class="admin-name">林老师</div><div class="admin-role">超级管理员</div></div></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="breadcrumb">活动管理 / <strong id="breadcrumb">学员与资格</strong></div>
+        <div class="db-status"><span class="db-dot"></span>MySQL DEMO · ONLINE</div>
+      </header>
+
+      <div class="content">
+        <section class="view is-active" id="studentsView">
+          <div class="page-header">
+            <div><h1>学员与抽奖资格</h1><p class="page-desc">管理学员 ID、一次性抽奖资格、中奖结果与兑换状态。</p></div>
+            <div class="actions">
+              <button class="button" id="importButton">⇧ 批量导入</button>
+              <button class="button primary" id="addButton">＋ 新增学员 ID</button>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><div class="stat-label">有效学员 ID</div><div class="stat-value" id="statTotal">0<span class="stat-note">人</span></div></div>
+            <div class="stat"><div class="stat-label">尚未抽取</div><div class="stat-value" id="statReady">0<span class="stat-note">人</span></div></div>
+            <div class="stat"><div class="stat-label">已完成抽取</div><div class="stat-value" id="statDrawn">0<span class="stat-note">人</span></div></div>
+            <div class="stat"><div class="stat-label">待兑换礼物</div><div class="stat-value" id="statPending">0<span class="stat-note">份</span></div></div>
+          </div>
+
+          <section class="workspace-panel">
+            <div class="toolbar">
+              <div class="filters">
+                <div class="search"><input class="control" id="searchInput" type="search" placeholder="搜索学员姓名或 ID"></div>
+                <select class="control" id="classFilter" aria-label="筛选班级"><option value="all">全部班级</option></select>
+                <select class="control" id="statusFilter" aria-label="筛选状态"><option value="all">全部状态</option><option value="ready">未抽取</option><option value="drawn">已抽取</option><option value="redeemed">已兑换</option><option value="disabled">已停用</option></select>
+              </div>
+              <div class="result-count" id="resultCount">共 0 条</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <colgroup><col style="width:38px"><col style="width:185px"><col style="width:120px"><col style="width:90px"><col style="width:120px"><col style="width:130px"><col style="width:122px"></colgroup>
+                <thead><tr><th class="checkbox-col"><input type="checkbox" id="selectAll" aria-label="全选"></th><th>学员</th><th>学员 ID</th><th>资格状态</th><th>中奖礼物</th><th>抽取时间</th><th style="text-align:right">操作</th></tr></thead>
+                <tbody id="studentRows"></tbody>
+              </table>
+              <div class="empty" id="emptyState" hidden><strong>没有找到匹配的学员</strong>请调整搜索关键词或筛选条件。</div>
+            </div>
+            <div class="panel-footer"><span>演示数据保存在当前浏览器</span><div class="pagination"><button class="page-button">‹</button><button class="page-button is-current">1</button><button class="page-button">›</button></div></div>
+          </section>
+        </section>
+
+        <section class="view" id="prizesView">
+          <div class="page-header"><div><h1>礼物抽取统计</h1><p class="page-desc">查看各类礼物的抽取数量和待兑换情况。</p></div><button class="button" id="exportButton">↓ 导出 CSV</button></div>
+          <div class="prize-grid" id="prizeGrid"></div>
+        </section>
+
+        <section class="view" id="logsView">
+          <div class="page-header"><div><h1>管理员操作日志</h1><p class="page-desc">停用、重置、删除和兑换操作均会记录。</p></div></div>
+          <div class="log-list" id="logList"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="menu" id="actionMenu"></div>
+
+  <div class="modal-backdrop" id="formModal" aria-hidden="true">
+    <form class="modal" id="studentForm">
+      <div class="modal-header"><div class="modal-title">新增学员 ID</div><button class="close" type="button" data-close="formModal" aria-label="关闭">×</button></div>
+      <div class="modal-body">
+        <div class="field"><label for="studentId">学员 ID</label><input class="control" id="studentId" required placeholder="例如 BC20260801" maxlength="24"><div class="field-note">ID 必须唯一，建议直接使用教务系统中的学员编号。</div></div>
+        <div class="field"><label for="studentName">学员姓名</label><input class="control" id="studentName" required placeholder="输入姓名" maxlength="20"></div>
+        <div class="field"><label for="studentClass">所属班级</label><input class="control" id="studentClass" required placeholder="例如 周六 14:00 创意编程班" maxlength="32"></div>
+      </div>
+      <div class="modal-footer"><button class="button" type="button" data-close="formModal">取消</button><button class="button primary" type="submit">保存学员</button></div>
+    </form>
+  </div>
+
+  <div class="modal-backdrop" id="importModal" aria-hidden="true">
+    <form class="modal" id="importForm">
+      <div class="modal-header"><div class="modal-title">批量导入学员 ID</div><button class="close" type="button" data-close="importModal" aria-label="关闭">×</button></div>
+      <div class="modal-body">
+        <div class="field"><label for="importText">每行一名学员</label><textarea class="control" id="importText" rows="8" required placeholder="BC20260821, 王小明, 周六 14:00 创意编程班&#10;BC20260822, 李小雨, 周日 10:00 Python 入门班"></textarea><div class="field-note">格式：学员 ID, 姓名, 班级。重复 ID 将自动跳过。</div></div>
+      </div>
+      <div class="modal-footer"><button class="button" type="button" data-close="importModal">取消</button><button class="button primary" type="submit">开始导入</button></div>
+    </form>
+  </div>
+
+  <div class="modal-backdrop" id="confirmModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="modal-header"><div class="modal-title" id="confirmTitle">确认操作</div><button class="close" type="button" data-close="confirmModal" aria-label="关闭">×</button></div>
+      <div class="modal-body"><div class="warning-box" id="confirmMessage"></div></div>
+      <div class="modal-footer"><button class="button" type="button" data-close="confirmModal">取消</button><button class="button danger" type="button" id="confirmAction">确认</button></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="receiptModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="receiptTitle">
+      <div class="modal-header"><div class="modal-title" id="receiptTitle">中奖与兑换记录</div><button class="close" type="button" data-close="receiptModal" aria-label="关闭">×</button></div>
+      <div class="modal-body" id="receiptBody"></div>
+      <div class="modal-footer"><button class="button primary" type="button" data-close="receiptModal">完成</button></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"><strong id="toastTitle">操作完成</strong><span id="toastMessage"></span></div>
+
+  <script>
+    const initialStudents = [
+      { id:'BC20260801', name:'陈一诺', className:'周六 14:00 创意编程班', status:'drawn', prize:'午夜星愿', drawnAt:'2026-08-13 14:32', redeemed:false },
+      { id:'BC20260802', name:'林子航', className:'周六 14:00 创意编程班', status:'ready', prize:null, drawnAt:null, redeemed:false },
+      { id:'BC20260803', name:'苏小满', className:'周日 10:00 Python 入门班', status:'redeemed', prize:'薄荷方程', drawnAt:'2026-08-13 13:48', redeemed:true },
+      { id:'BC20260804', name:'周乐言', className:'周日 10:00 Python 入门班', status:'drawn', prize:'晴空飞船', drawnAt:'2026-08-13 14:08', redeemed:false },
+      { id:'BC20260805', name:'许星辰', className:'周三 18:30 图形化编程班', status:'ready', prize:null, drawnAt:null, redeemed:false },
+      { id:'BC20260806', name:'吴桐', className:'周三 18:30 图形化编程班', status:'disabled', prize:null, drawnAt:null, redeemed:false },
+      { id:'BC20260807', name:'郑可可', className:'周六 14:00 创意编程班', status:'redeemed', prize:'珊瑚信号', drawnAt:'2026-08-12 16:22', redeemed:true },
+      { id:'BC20260808', name:'陆予安', className:'周日 10:00 Python 入门班', status:'drawn', prize:'橘子频道', drawnAt:'2026-08-13 12:41', redeemed:false },
+      { id:'BC20260809', name:'沈妙妙', className:'周三 18:30 图形化编程班', status:'ready', prize:null, drawnAt:null, redeemed:false },
+      { id:'BC20260810', name:'何沐阳', className:'周六 14:00 创意编程班', status:'drawn', prize:'银色月球', drawnAt:'2026-08-13 14:51', redeemed:false },
+      { id:'BC20260811', name:'顾念', className:'周日 10:00 Python 入门班', status:'ready', prize:null, drawnAt:null, redeemed:false },
+      { id:'BC20260812', name:'方圆', className:'周三 18:30 图形化编程班', status:'drawn', prize:'柠檬唱片', drawnAt:'2026-08-13 15:02', redeemed:false }
+    ];
+
+    const prizeCatalog = [
+      ['珊瑚信号','#ff705f'],['晴空飞船','#58b9ff'],['柠檬唱片','#d9e83e'],['莓果轨迹','#ed79b2'],
+      ['薄荷方程','#43d7b6'],['橘子频道','#ffad4d'],['银色月球','#b7c2d5'],['午夜星愿','#a990ff']
+    ];
+
+    let students = loadData('bc-admin-students', initialStudents);
+    let logs = loadData('bc-admin-logs', [
+      { time:'2026-08-13 15:05', admin:'林老师', action:'标记兑换', detail:'方圆 · BC20260812 · 柠檬唱片' },
+      { time:'2026-08-13 14:57', admin:'林老师', action:'停用 ID', detail:'吴桐 · BC20260806' },
+      { time:'2026-08-13 14:35', admin:'系统', action:'完成抽奖', detail:'陈一诺 · BC20260801 · 午夜星愿' }
+    ]);
+    let pendingConfirm = null;
+    let activeStudentId = null;
+
+    const rows = document.querySelector('#studentRows');
+    const searchInput = document.querySelector('#searchInput');
+    const classFilter = document.querySelector('#classFilter');
+    const statusFilter = document.querySelector('#statusFilter');
+    const actionMenu = document.querySelector('#actionMenu');
+
+    function loadData(key, fallback) {
+      try { return JSON.parse(localStorage.getItem(key)) || structuredClone(fallback); }
+      catch { return structuredClone(fallback); }
+    }
+
+    function persist() {
+      localStorage.setItem('bc-admin-students', JSON.stringify(students));
+      localStorage.setItem('bc-admin-logs', JSON.stringify(logs));
+    }
+
+    function statusLabel(student) {
+      if (student.status === 'disabled') return ['disabled','已停用'];
+      if (student.redeemed) return ['redeemed','已兑换'];
+      if (student.prize) return ['drawn','已抽取'];
+      return ['ready','未抽取'];
+    }
+
+    function filteredStudents() {
+      const query = searchInput.value.trim().toLowerCase();
+      return students.filter(student => {
+        const matchesQuery = !query || `${student.name} ${student.id}`.toLowerCase().includes(query);
+        const matchesClass = classFilter.value === 'all' || student.className === classFilter.value;
+        const [key] = statusLabel(student);
+        const matchesStatus = statusFilter.value === 'all' || key === statusFilter.value;
+        return matchesQuery && matchesClass && matchesStatus;
+      });
+    }
+
+    function render() {
+      renderFilters();
+      renderStats();
+      renderRows();
+      renderPrizes();
+      renderLogs();
+      document.querySelector('#studentNavCount').textContent = students.length;
+    }
+
+    function renderFilters() {
+      const current = classFilter.value || 'all';
+      const classes = [...new Set(students.map(student => student.className))].sort();
+      classFilter.innerHTML = '<option value="all">全部班级</option>' + classes.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+      classFilter.value = classes.includes(current) ? current : 'all';
+    }
+
+    function renderStats() {
+      const active = students.filter(s => s.status !== 'disabled');
+      document.querySelector('#statTotal').firstChild.textContent = active.length;
+      document.querySelector('#statReady').firstChild.textContent = active.filter(s => !s.prize).length;
+      document.querySelector('#statDrawn').firstChild.textContent = active.filter(s => s.prize).length;
+      document.querySelector('#statPending').firstChild.textContent = active.filter(s => s.prize && !s.redeemed).length;
+    }
+
+    function renderRows() {
+      const list = filteredStudents();
+      document.querySelector('#resultCount').textContent = `共 ${list.length} 条`;
+      document.querySelector('#emptyState').hidden = list.length > 0;
+      rows.innerHTML = list.map(student => {
+        const [statusClass, statusText] = statusLabel(student);
+        return `<tr>
+          <td class="checkbox-col"><input type="checkbox" aria-label="选择 ${escapeHtml(student.name)}"></td>
+          <td><div class="student-cell"><span class="student-avatar">${escapeHtml(student.name.slice(0,1))}</span><span><span class="student-name">${escapeHtml(student.name)}</span><span class="student-class">${escapeHtml(student.className)}</span></span></div></td>
+          <td><span class="id-code">${escapeHtml(student.id)}</span></td>
+          <td><span class="badge ${statusClass}">${statusText}</span></td>
+          <td>${student.prize ? `<span class="prize-name">${escapeHtml(student.prize)}</span>` : '<span class="prize-empty">尚未抽取</span>'}</td>
+          <td><span class="time">${student.drawnAt || '—'}</span></td>
+          <td><div class="row-actions">${student.prize ? `<button class="button small" data-receipt="${student.id}">查看记录</button>` : ''}<button class="button icon-only" data-menu="${student.id}" aria-label="更多操作" title="更多操作">···</button></div></td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderPrizes() {
+      const drawn = students.filter(s => s.prize);
+      document.querySelector('#prizeGrid').innerHTML = prizeCatalog.map(([name,color]) => {
+        const total = drawn.filter(s => s.prize === name).length;
+        const pending = drawn.filter(s => s.prize === name && !s.redeemed).length;
+        return `<article class="prize-item" style="--prize-color:${color}"><div class="prize-swatch"></div><div class="prize-title">${name}</div><div class="prize-meta">当前活动礼物</div><div class="prize-total"><strong>${total}</strong><span class="badge ${pending ? 'drawn':'redeemed'}">${pending} 待兑换</span></div></article>`;
+      }).join('');
+    }
+
+    function renderLogs() {
+      document.querySelector('#logList').innerHTML = logs.length ? logs.map(log => `<div class="log-row"><span class="log-time">${escapeHtml(log.time)}</span><span class="log-action">${escapeHtml(log.action)}</span><span class="log-detail">${escapeHtml(log.detail)}</span><span>${escapeHtml(log.admin)}</span></div>`).join('') : '<div class="empty"><strong>暂无操作日志</strong>管理员操作会显示在这里。</div>';
+    }
+
+    function showMenu(button, id) {
+      activeStudentId = id;
+      const student = students.find(s => s.id === id);
+      const rect = button.getBoundingClientRect();
+      actionMenu.innerHTML = `
+        ${student.prize ? `<button data-action="redeem">${student.redeemed ? '取消兑换标记' : '标记为已兑换'}</button>` : ''}
+        <button data-action="toggle">${student.status === 'disabled' ? '重新启用 ID' : '停用 ID'}</button>
+        ${student.prize ? '<button data-action="reset">重置抽奖资格</button>' : ''}
+        <div class="menu-separator"></div><button class="danger-text" data-action="delete">永久删除 ID</button>`;
+      actionMenu.style.left = `${Math.min(rect.right - 166, innerWidth - 178)}px`;
+      actionMenu.style.top = `${Math.min(rect.bottom + 4, innerHeight - 190)}px`;
+      actionMenu.classList.add('is-open');
+    }
+
+    function performAction(action) {
+      const student = students.find(s => s.id === activeStudentId);
+      if (!student) return;
+      actionMenu.classList.remove('is-open');
+
+      if (action === 'redeem') {
+        student.redeemed = !student.redeemed;
+        student.status = student.redeemed ? 'redeemed' : 'drawn';
+        addLog(student.redeemed ? '标记兑换' : '取消兑换', `${student.name} · ${student.id} · ${student.prize}`);
+        saveAndNotify('兑换状态已更新', student.redeemed ? '该礼物已标记为完成兑换。' : '礼物已恢复为待兑换状态。');
+      }
+
+      if (action === 'toggle') {
+        student.status = student.status === 'disabled' ? (student.prize ? (student.redeemed ? 'redeemed':'drawn') : 'ready') : 'disabled';
+        addLog(student.status === 'disabled' ? '停用 ID' : '启用 ID', `${student.name} · ${student.id}`);
+        saveAndNotify('资格状态已更新', student.status === 'disabled' ? '该学员暂时无法进行抽奖。' : '该学员 ID 已重新启用。');
+      }
+
+      if (action === 'reset') {
+        openConfirm('重置抽奖资格', `将清除 ${student.name}（${student.id}）的中奖结果和兑换状态。完成后该 ID 可以再次抽奖。`, () => {
+          const oldPrize = student.prize;
+          student.prize = null; student.drawnAt = null; student.redeemed = false; student.status = 'ready';
+          addLog('重置资格', `${student.name} · ${student.id} · 原奖品 ${oldPrize}`);
+          saveAndNotify('抽奖资格已重置', '该学员现在可以重新抽取一次。');
+        });
+      }
+
+      if (action === 'delete') {
+        openConfirm('永久删除学员 ID', `即将永久删除 ${student.name}（${student.id}）。此演示会从列表中移除该 ID；正式系统建议优先使用“停用”。`, () => {
+          students = students.filter(s => s.id !== student.id);
+          addLog('永久删除 ID', `${student.name} · ${student.id}`);
+          saveAndNotify('学员 ID 已删除', '该 ID 已从当前活动中移除。');
+        });
+      }
+    }
+
+    function openReceipt(id) {
+      const student = students.find(s => s.id === id);
+      if (!student) return;
+      document.querySelector('#receiptBody').innerHTML = `<div style="display:grid;gap:12px;font-size:11px"><div><span style="color:#7b858e">学员</span><strong style="float:right">${escapeHtml(student.name)} · ${escapeHtml(student.id)}</strong></div><div><span style="color:#7b858e">中奖礼物</span><strong style="float:right;color:var(--accent)">${escapeHtml(student.prize || '尚未抽取')}</strong></div><div><span style="color:#7b858e">抽取时间</span><strong style="float:right">${student.drawnAt || '—'}</strong></div><div><span style="color:#7b858e">兑换状态</span><strong style="float:right">${student.redeemed ? '已兑换' : '待兑换'}</strong></div></div>`;
+      openModal('receiptModal');
+    }
+
+    function openConfirm(title, message, callback) {
+      document.querySelector('#confirmTitle').textContent = title;
+      document.querySelector('#confirmMessage').textContent = message;
+      pendingConfirm = callback;
+      openModal('confirmModal');
+    }
+
+    function addLog(action, detail) {
+      const now = new Date();
+      const pad = value => String(value).padStart(2,'0');
+      logs.unshift({ time:`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`, admin:'林老师', action, detail });
+    }
+
+    function saveAndNotify(title, message) {
+      persist(); render(); showToast(title, message);
+    }
+
+    function openModal(id) {
+      const modal = document.querySelector(`#${id}`);
+      modal.classList.add('is-visible'); modal.setAttribute('aria-hidden','false');
+      setTimeout(() => modal.querySelector('input,textarea,button')?.focus(), 60);
+    }
+
+    function closeModal(id) {
+      const modal = document.querySelector(`#${id}`);
+      modal.classList.remove('is-visible'); modal.setAttribute('aria-hidden','true');
+    }
+
+    let toastTimer;
+    function showToast(title, message) {
+      clearTimeout(toastTimer);
+      document.querySelector('#toastTitle').textContent = title;
+      document.querySelector('#toastMessage').textContent = message;
+      document.querySelector('#toast').classList.add('is-visible');
+      toastTimer = setTimeout(() => document.querySelector('#toast').classList.remove('is-visible'), 2800);
+    }
+
+    function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char])); }
+
+    document.querySelectorAll('.nav-button').forEach(button => button.addEventListener('click', () => {
+      document.querySelectorAll('.nav-button').forEach(item => item.classList.toggle('is-active', item === button));
+      document.querySelectorAll('.view').forEach(view => view.classList.remove('is-active'));
+      document.querySelector(`#${button.dataset.view}View`).classList.add('is-active');
+      document.querySelector('#breadcrumb').textContent = button.querySelector('span:nth-child(2)').textContent;
+    }));
+
+    [searchInput,classFilter,statusFilter].forEach(control => control.addEventListener('input', renderRows));
+    document.querySelector('#addButton').addEventListener('click', () => openModal('formModal'));
+    document.querySelector('#importButton').addEventListener('click', () => openModal('importModal'));
+    document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => closeModal(button.dataset.close)));
+
+    rows.addEventListener('click', event => {
+      const menuButton = event.target.closest('[data-menu]');
+      const receiptButton = event.target.closest('[data-receipt]');
+      if (menuButton) showMenu(menuButton, menuButton.dataset.menu);
+      if (receiptButton) openReceipt(receiptButton.dataset.receipt);
+    });
+
+    actionMenu.addEventListener('click', event => { const button = event.target.closest('[data-action]'); if (button) performAction(button.dataset.action); });
+    document.addEventListener('click', event => { if (!event.target.closest('[data-menu]') && !event.target.closest('#actionMenu')) actionMenu.classList.remove('is-open'); });
+
+    document.querySelector('#studentForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const id = document.querySelector('#studentId').value.trim().toUpperCase();
+      if (students.some(student => student.id === id)) { showToast('无法新增', '该学员 ID 已存在。'); return; }
+      const student = { id, name:document.querySelector('#studentName').value.trim(), className:document.querySelector('#studentClass').value.trim(), status:'ready', prize:null, drawnAt:null, redeemed:false };
+      students.unshift(student); addLog('新增 ID', `${student.name} · ${student.id}`); persist(); render(); closeModal('formModal'); event.target.reset(); showToast('学员已新增', `${student.id} 可进行一次抽奖。`);
+    });
+
+    document.querySelector('#importForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const lines = document.querySelector('#importText').value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      let added = 0, skipped = 0;
+      lines.forEach(line => {
+        const [rawId, rawName, rawClass] = line.split(',').map(value => value?.trim());
+        const id = rawId?.toUpperCase();
+        if (!id || !rawName || !rawClass || students.some(student => student.id === id)) { skipped += 1; return; }
+        students.push({ id, name:rawName, className:rawClass, status:'ready', prize:null, drawnAt:null, redeemed:false }); added += 1;
+      });
+      addLog('批量导入', `新增 ${added} 个 ID，跳过 ${skipped} 条`); persist(); render(); closeModal('importModal'); event.target.reset(); showToast('批量导入完成', `成功新增 ${added} 个 ID，跳过 ${skipped} 条。`);
+    });
+
+    document.querySelector('#confirmAction').addEventListener('click', () => { const callback = pendingConfirm; pendingConfirm = null; closeModal('confirmModal'); callback?.(); });
+    document.querySelector('#exportButton').addEventListener('click', () => {
+      const csv = ['student_id,name,class,status,prize,drawn_at,redeemed', ...students.map(s => [s.id,s.name,s.className,statusLabel(s)[1],s.prize||'',s.drawnAt||'',s.redeemed?'yes':'no'].map(value => `"${String(value).replaceAll('"','""')}"`).join(','))].join('\n');
+      const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv'})); link.download = 'blind-box-results.csv'; link.click(); URL.revokeObjectURL(link.href); showToast('导出完成','CSV 文件已生成。');
+    });
+
+    document.querySelector('#selectAll').addEventListener('change', event => rows.querySelectorAll('input[type="checkbox"]').forEach(box => box.checked = event.target.checked));
+    render();
+  </script>
+</body>
+</html>

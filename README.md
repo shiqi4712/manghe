@@ -1,0 +1,45 @@
+# 编程猫惊喜盲盒
+
+生产版为 Node.js + Express + 独立 MySQL 架构，适配 Ubuntu 24.04 应用服务器。
+
+## 页面
+
+- `/`：学生姓名与 ID 验证、一次性抽奖、截图兑换凭证
+- `/admin.html`：教师管理后台
+- `/api/health`：应用与数据库健康检查
+
+## 本地启动
+
+1. 在独立 MySQL 执行 `database/schema.sql`。
+2. 复制 `.env.example` 为 `.env`，填写数据库连接和会话密钥。
+3. 运行：
+
+```bash
+npm ci
+npm start
+```
+
+应用默认监听独立端口 `127.0.0.1:3103`，由 Nginx 按子域名对外提供访问，不影响同一服务器上的其他实例。
+
+## 学员导入
+
+后台批量导入每行只要求两列：
+
+```text
+BC20260801, 陈一诺
+BC20260802, 林子航
+```
+
+第三列班级可选。CSV 示例见 `database/students-template.csv`。
+
+## 独立 MySQL
+
+`.env` 中的 `DB_HOST` 填独立 MySQL 地址。数据库安全组仅允许 Ubuntu 应用服务器的私网 IP 访问 `3306`，不要向整个互联网开放。
+
+完整的 GitHub 拉取、独立实例、子域名和 HTTPS 部署步骤见 `deploy/README.md`。后续更新使用 `deploy/update-from-github.sh`。
+
+GitHub 仓库：`https://github.com/shiqi4712/manghe`
+
+## 初始管理员
+
+执行 `database/schema.sql` 后会创建两个管理员账号：`shiqi`（诗琪）和 `yujing`（余婧）。密码以 bcrypt 哈希存储在 MySQL，不会明文保存。上线前请在数据库中替换初始密码哈希。

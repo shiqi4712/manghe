@@ -1,0 +1,24 @@
+{
+  "name": "bianchengmao-surprise-draw",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Student ID based one-time surprise draw with MySQL administration.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "check": "node --check server.js && node --check public/admin.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.1",
+    "helmet": "^8.1.0",
+    "mysql2": "^3.14.3"
+  }
+}
