@@ -10,7 +10,7 @@
 
 ## 本地启动
 
-1. 在独立 MySQL 执行 `database/schema.sql`。
+1. 在阿里云 RDS 的 `manghe` 数据库执行 `database/schema.sql`。
 2. 复制 `.env.example` 为 `.env`，填写数据库连接和会话密钥。
 3. 运行：
 
@@ -32,13 +32,15 @@ BC20260802, 林子航
 
 第三列班级可选。CSV 示例见 `database/students-template.csv`。
 
-## 独立 MySQL
+## 阿里云 RDS MySQL
 
-`.env` 中的 `DB_HOST` 填独立 MySQL 地址。数据库安全组仅允许 Ubuntu 应用服务器的私网 IP 访问 `3306`，不要向整个互联网开放。
+`.env.example` 已配置 RDS 地址、数据库名和账号，真实密码只填写在服务器的 `.env`。RDS 白名单仅允许应用服务器公网出口 IP `39.96.54.176/32`，不要向整个互联网开放。
 
 完整的 GitHub 拉取、独立实例、子域名和 HTTPS 部署步骤见 `deploy/README.md`。后续更新使用 `deploy/update-from-github.sh`。
 
 GitHub 仓库：`https://github.com/shiqi4712/manghe`
+
+正式访问域名：`https://mh.bcmty.cn`
 
 ## 初始管理员
 

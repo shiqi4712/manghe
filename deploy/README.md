@@ -27,61 +27,37 @@ sudo nginx -T 2>/dev/null | grep -E 'server_name|proxy_pass'
 抽奖子域名 -> 39.96.54.176
 ```
 
-例如 `draw.example.com`。等待 DNS 生效后可用 `dig +short draw.example.com` 检查。
+本项目使用 `mh.bcmty.cn`。等待 DNS 生效后可用 `dig +short mh.bcmty.cn` 检查。
 
 ## 2. 让服务器读取 GitHub
 
-公开仓库可直接使用 HTTPS 地址。私有仓库建议为服务器创建只读 Deploy Key，并把公钥添加到 GitHub 仓库的 **Settings > Deploy keys**：
-
-```bash
-ssh-keygen -t ed25519 -f ~/.ssh/surprise_draw_deploy -C surprise-draw-server
-cat ~/.ssh/surprise_draw_deploy.pub
-```
-
-为该密钥建立独立 GitHub 主机别名，避免影响服务器其他仓库：
-
-```sshconfig
-Host github-surprise-draw
-  HostName github.com
-  User git
-  IdentityFile ~/.ssh/surprise_draw_deploy
-  IdentitiesOnly yes
-```
-
-保存为 `~/.ssh/config` 后设置权限并验证连接：
-
-```bash
-chmod 700 ~/.ssh
-chmod 600 ~/.ssh/config ~/.ssh/surprise_draw_deploy
-chmod 644 ~/.ssh/surprise_draw_deploy.pub
-ssh -T git@github-surprise-draw
-```
+仓库 `shiqi4712/manghe` 是公开仓库，服务器可直接使用 HTTPS 拉取，不需要配置 GitHub 账号、令牌或 Deploy Key。
 
 首次拉取代码：
 
 ```bash
 sudo mkdir -p /var/www
 sudo chown "$USER":www-data /var/www
-git clone --branch main git@github-surprise-draw:shiqi4712/manghe.git /var/www/surprise-draw
+git clone --branch main https://github.com/shiqi4712/manghe.git /var/www/surprise-draw
 cd /var/www/surprise-draw
 npm ci --omit=dev
 ```
 
 GitHub 仓库为 `shiqi4712/manghe`。正式发布分支使用 `main`。
 
-## 3. 配置 MySQL 和环境变量
+## 3. 配置阿里云 RDS MySQL 和环境变量
 
-在独立 MySQL 执行 `database/schema.sql`，并只允许应用服务器私网 IP `172.24.10.24` 访问 `3306`。
+现有数据库名称与账号均为 `manghe`。RDS 公网地址已经写入 `.env.example`，白名单只允许应用服务器公网出口 IP `39.96.54.176/32`。在 RDS 的 `manghe` 数据库执行 `database/schema.sql`；脚本只创建业务数据表，不创建数据库或数据库账号。
 
 首次运行配置脚本会创建 `.env` 后停止：
 
 ```bash
 cd /var/www/surprise-draw
-sudo bash deploy/configure-server.sh draw.example.com 3103
+sudo bash deploy/configure-server.sh mh.bcmty.cn 3103
 sudo nano .env
 ```
 
-填写真实的 `DB_HOST`、`DB_NAME`、`DB_USER`、`DB_PASSWORD`，并生成会话密钥：
+确认 `DB_HOST`、`DB_NAME`、`DB_USER`，只在服务器 `.env` 中填写真实 `DB_PASSWORD`，并生成会话密钥：
 
 ```bash
 openssl rand -hex 32
@@ -94,7 +70,7 @@ openssl rand -hex 32
 填写 `.env` 后再次运行：
 
 ```bash
-sudo bash deploy/configure-server.sh draw.example.com 3103
+sudo bash deploy/configure-server.sh mh.bcmty.cn 3103
 sudo systemctl status surprise-draw --no-pager
 curl http://127.0.0.1:3103/api/health
 ```
@@ -104,14 +80,14 @@ curl http://127.0.0.1:3103/api/health
 ```bash
 sudo apt update
 sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d draw.example.com
+sudo certbot --nginx -d mh.bcmty.cn
 ```
 
 最终访问地址：
 
 ```text
-学生端：https://draw.example.com/
-管理端：https://draw.example.com/admin.html
+学生端：https://mh.bcmty.cn/
+管理端：https://mh.bcmty.cn/admin.html
 ```
 
 ## 5. 后续从 GitHub 更新

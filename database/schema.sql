@@ -1,8 +1,6 @@
-CREATE DATABASE IF NOT EXISTS surprise_draw
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE surprise_draw;
+-- Run this script while connected to the existing Aliyun RDS database `manghe`.
+-- The application account does not need CREATE DATABASE permission.
+USE manghe;
 
 CREATE TABLE IF NOT EXISTS students (
   student_id VARCHAR(32) NOT NULL,
@@ -62,8 +60,4 @@ CREATE TABLE IF NOT EXISTS admin_logs (
   KEY idx_logs_student (student_id)
 ) ENGINE=InnoDB;
 
--- Create this account on the independent MySQL server and restrict HOST to
--- the Ubuntu application's private IP instead of using '%'.
--- CREATE USER 'surprise_app'@'172.24.10.24' IDENTIFIED BY 'strong-password';
--- GRANT SELECT, INSERT, UPDATE, DELETE ON surprise_draw.* TO 'surprise_app'@'172.24.10.24';
--- FLUSH PRIVILEGES;
+-- The Aliyun RDS account and network whitelist are managed in the RDS console.

@@ -12,7 +12,7 @@ if (( EUID != 0 )); then
 fi
 
 if [[ -z "$DOMAIN" || ! "$DOMAIN" =~ ^[a-zA-Z0-9.-]+$ ]]; then
-  echo "Usage: sudo bash deploy/configure-server.sh draw.example.com [port]"
+  echo "Usage: sudo bash deploy/configure-server.sh mh.bcmty.cn [port]"
   exit 1
 fi
 
