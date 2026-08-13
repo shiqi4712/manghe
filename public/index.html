@@ -713,11 +713,14 @@
     }
 
     .result-name {
-      margin: 10px 0 0;
+      width: min(100%, 360px);
+      margin: 12px auto 0;
       color: var(--winner-color);
-      font-size: 15px;
+      font-size: clamp(20px, 5.8vw, 25px);
       font-weight: 900;
-      line-height: 1.55;
+      line-height: 1.38;
+      text-wrap: balance;
+      text-shadow: 0 0 20px color-mix(in srgb, var(--winner-color) 34%, transparent);
     }
 
     .result-copy {
@@ -841,7 +844,7 @@
       .result-orbit { width: 154px; margin-bottom: 8px; }
       .result-art { width: 116px; }
       .result h2 { font-size: 29px; }
-      .result-name { margin-top: 6px; }
+      .result-name { margin-top: 8px; }
       .result-copy { margin-bottom: 10px; }
       .capture-ticket { padding: 10px 12px; margin-bottom: 10px; }
       .again-button { min-height: 46px; }
