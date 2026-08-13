@@ -715,8 +715,9 @@
     .result-name {
       margin: 10px 0 0;
       color: var(--winner-color);
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 900;
+      line-height: 1.55;
     }
 
     .result-copy {
@@ -911,7 +912,7 @@
       <div class="result-orbit"><div class="result-art" id="resultArt" aria-hidden="true"></div></div>
       <p class="result-label" id="resultLabel">TARGET LOCKED · RARE</p>
       <h2 id="resultTitle">目标礼物已锁定 ✨</h2>
-      <p class="result-name" id="resultName">星光旅行家</p>
+      <p class="result-name" id="resultName">请在第二节课下课后找老师兑换</p>
       <p class="result-copy" id="resultCopy">截图保存，课后寻找老师兑换</p>
       <div class="capture-ticket" aria-label="截图兑换提醒">
         <span class="capture-icon" aria-hidden="true">
@@ -1106,7 +1107,7 @@
     function showResult(prize) {
       result.style.setProperty('--winner-color', prize.color);
       resultArt.innerHTML = characterImage(prizes[1].image, '红色编程猫造型');
-      resultName.textContent = prize.name;
+      resultName.textContent = '请在第二节课下课后找老师兑换';
       ticketPrizeName.textContent = prize.name;
       resultLabel.textContent = `TARGET LOCKED · ${prize.rarity}`;
       buildParticles();
