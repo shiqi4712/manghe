@@ -21,8 +21,8 @@ if [[ ! "$APP_PORT" =~ ^[0-9]+$ ]] || (( APP_PORT < 1024 || APP_PORT > 65535 ));
   exit 1
 fi
 
-if [[ ! -d "$APP_DIR/.git" || ! -f "$APP_DIR/server.js" ]]; then
-  echo "Expected a Git checkout at $APP_DIR."
+if [[ ! -f "$APP_DIR/server.js" || ! -f "$APP_DIR/package.json" ]]; then
+  echo "Expected the application source at $APP_DIR."
   exit 1
 fi
 

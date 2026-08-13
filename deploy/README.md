@@ -31,14 +31,17 @@ sudo nginx -T 2>/dev/null | grep -E 'server_name|proxy_pass'
 
 ## 2. 让服务器读取 GitHub
 
-仓库 `shiqi4712/manghe` 是公开仓库，服务器可直接使用 HTTPS 拉取，不需要配置 GitHub 账号、令牌或 Deploy Key。
+仓库 `shiqi4712/manghe` 是公开仓库，不需要 GitHub 账号、令牌或 Deploy Key。若服务器不能连接 `github.com:443`，可使用 GitHub 官方 `codeload.github.com` 归档地址。
 
 首次拉取代码：
 
 ```bash
 sudo mkdir -p /var/www
 sudo chown "$USER":www-data /var/www
-git clone --branch main https://github.com/shiqi4712/manghe.git /var/www/surprise-draw
+mkdir /var/www/surprise-draw
+curl -fL --retry 3 --connect-timeout 15 \
+  https://codeload.github.com/shiqi4712/manghe/tar.gz/refs/heads/main \
+  | tar -xz --strip-components=1 -C /var/www/surprise-draw
 cd /var/www/surprise-draw
 npm ci --omit=dev
 ```
@@ -99,7 +102,7 @@ cd /var/www/surprise-draw
 sudo BRANCH=main bash deploy/update-from-github.sh
 ```
 
-脚本只接受 fast-forward 更新，随后安装锁定依赖、检查代码、重启独立服务并检查 `/api/health`。服务器的 `.env` 不在 Git 中，不会被更新覆盖。
+脚本在 Git checkout 中使用 fast-forward 更新；归档部署则继续从 GitHub 官方 `codeload` 下载。随后安装锁定依赖、检查代码、重启独立服务并检查 `/api/health`。服务器的 `.env` 和 `node_modules` 不会被归档覆盖。
 
 ## 故障检查
 
