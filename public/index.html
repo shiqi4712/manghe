@@ -372,10 +372,12 @@
       place-items: center;
     }
 
-    .prize-art svg {
-      width: 88%;
-      overflow: visible;
+    .prize-art img {
+      width: 86%;
+      height: 94%;
+      object-fit: contain;
       filter: drop-shadow(0 14px 10px rgba(0,0,0,.24));
+      image-rendering: auto;
     }
 
     .prize-info {
@@ -688,6 +690,13 @@
       animation: resultFloat 2.8s ease-in-out infinite;
     }
 
+    .result-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: auto;
+    }
+
     .result-label {
       margin: 0 0 8px;
       color: var(--winner-color);
@@ -850,19 +859,6 @@
 <body>
   <div class="sky" aria-hidden="true"></div>
 
-  <section class="identity-gate" id="identityGate">
-    <form class="identity-card" id="identityForm">
-      <div class="identity-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M5 20c.8-4 3.1-6 7-6s6.2 2 7 6M4 4v4M4 4h4M20 4v4M20 4h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
-      <p class="identity-kicker">MISSION ACCESS · 身份验证</p>
-      <h2>解锁惊喜盲盒</h2>
-      <div class="identity-field"><label for="loginName">学生姓名</label><input class="identity-input" id="loginName" autocomplete="name" required maxlength="64" placeholder="请输入姓名"></div>
-      <div class="identity-field"><label for="loginId">学员 ID</label><input class="identity-input" id="loginId" autocomplete="username" required maxlength="32" placeholder="例如 BC20260801"></div>
-      <p class="identity-error" id="identityError" role="alert"></p>
-      <button class="identity-submit" id="identitySubmit" type="submit">验证抽奖资格</button>
-      <p class="identity-note">姓名与 ID 仅用于核验本次活动资格</p>
-    </form>
-  </section>
-
   <main class="app">
     <nav class="topbar" aria-label="应用控制">
       <div class="brand">
@@ -900,7 +896,7 @@
         <span class="start-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="7.5" stroke="currentColor" stroke-width="2"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
         <span id="startText">启动目标扫描</span>
       </button>
-      <p class="hint" id="hint">每位用户仅可抽取 <strong>1 次</strong>，结果将自动保存</p>
+      <p class="hint" id="hint">每次扫描都会随机锁定一份惊喜礼物</p>
     </section>
 
     <footer class="status-row"><span>SPACE MISSION · AFTER CLASS</span><span>● NAVIGATION ONLINE</span></footer>
@@ -926,32 +922,21 @@
           <span class="capture-copy">保存当前页面，课后向老师出示截图，兑换 <strong id="ticketPrizeName">星光旅行家</strong></span>
         </span>
       </div>
-      <button class="again-button" id="againButton" type="button">返回探索舱</button>
+      <button class="again-button" id="againButton" type="button">再抽一次</button>
     </div>
   </section>
 
   <script>
     const prizes = [
-      { name: '珊瑚信号', rarity: '闪耀', color: '#ff705f', soft: '#ffc2b9', pattern: 'planet' },
-      { name: '晴空飞船', rarity: '稀有', color: '#58b9ff', soft: '#b9e2ff', pattern: 'rocket' },
-      { name: '柠檬唱片', rarity: '奇趣', color: '#d9e83e', soft: '#f2f7a8', pattern: 'sun' },
-      { name: '莓果轨迹', rarity: '闪耀', color: '#ed79b2', soft: '#f8bfdb', pattern: 'rainbow' },
-      { name: '薄荷方程', rarity: '珍藏', color: '#43d7b6', soft: '#aef0df', pattern: 'blocks' },
-      { name: '橘子频道', rarity: '奇趣', color: '#ffad4d', soft: '#ffd29e', pattern: 'bolt' },
-      { name: '银色月球', rarity: '稀有', color: '#b7c2d5', soft: '#e4e9f1', pattern: 'moon' },
-      { name: '午夜星愿', rarity: '传说', color: '#a990ff', soft: '#d5c9ff', pattern: 'star' }
+      { name: '珊瑚信号', rarity: '闪耀', color: '#ff705f', soft: '#ffc2b9', image: '/assets/characters/character-1.png' },
+      { name: '晴空飞船', rarity: '稀有', color: '#58b9ff', soft: '#b9e2ff', image: '/assets/characters/character-2.png' },
+      { name: '柠檬唱片', rarity: '奇趣', color: '#d9e83e', soft: '#f2f7a8', image: '/assets/characters/character-3.png' },
+      { name: '莓果轨迹', rarity: '闪耀', color: '#ed79b2', soft: '#f8bfdb', image: '/assets/characters/character-4.png' },
+      { name: '薄荷方程', rarity: '珍藏', color: '#43d7b6', soft: '#aef0df', image: '/assets/characters/character-5.png' },
+      { name: '橘子频道', rarity: '奇趣', color: '#ffad4d', soft: '#ffd29e', image: '/assets/characters/character-6.png' },
+      { name: '银色月球', rarity: '稀有', color: '#b7c2d5', soft: '#e4e9f1', image: '/assets/characters/character-7.png' },
+      { name: '午夜星愿', rarity: '传说', color: '#a990ff', soft: '#d5c9ff', image: '/assets/characters/character-8.png' }
     ];
-
-    const patterns = {
-      planet: '<circle cx="84" cy="63" r="18" fill="var(--rarity)"/><path d="M55 68c13 9 46 3 55-10" stroke="var(--soft)" stroke-width="7" stroke-linecap="round"/>',
-      rocket: '<path d="M79 38c17 12 19 30 8 45L70 66c-5-10-1-21 9-28Z" fill="var(--rarity)"/><path d="m70 66-12 6 10-15M87 83l-6 12-3-17" fill="var(--soft)"/><circle cx="82" cy="54" r="5" fill="#fff"/>',
-      sun: '<circle cx="79" cy="63" r="17" fill="var(--rarity)"/><path d="M79 35v9M79 82v9M51 63h9M98 63h9" stroke="var(--soft)" stroke-width="5" stroke-linecap="round"/>',
-      rainbow: '<path d="M55 76a26 26 0 0 1 52 0" stroke="var(--rarity)" stroke-width="9" fill="none"/><path d="M63 76a18 18 0 0 1 36 0" stroke="var(--soft)" stroke-width="7" fill="none"/>',
-      blocks: '<rect x="55" y="45" width="20" height="20" rx="4" fill="var(--rarity)"/><rect x="81" y="66" width="20" height="20" rx="4" fill="var(--rarity)"/><rect x="81" y="43" width="18" height="17" rx="4" fill="var(--soft)"/>',
-      bolt: '<path d="m86 36-25 32h17l-8 26 30-38H82l4-20Z" fill="var(--rarity)"/>',
-      moon: '<path d="M91 39a27 27 0 1 0 10 43A23 23 0 0 1 91 39Z" fill="var(--rarity)"/><circle cx="59" cy="46" r="4" fill="var(--soft)"/>',
-      star: '<path d="m80 36 8 17 19 2-14 13 4 19-17-9-17 9 4-19-14-13 19-2 8-17Z" fill="var(--rarity)"/>'
-    };
 
     const track = document.querySelector('#track');
     const shell = document.querySelector('#reelShell');
@@ -971,45 +956,15 @@
     const particleField = document.querySelector('#particleField');
     const soundToggle = document.querySelector('#soundToggle');
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const identityGate = document.querySelector('#identityGate');
-    const identityForm = document.querySelector('#identityForm');
-    const identitySubmit = document.querySelector('#identitySubmit');
-    const identityError = document.querySelector('#identityError');
 
     let isSpinning = false;
     let muted = true;
     let lastCenterIndex = -1;
     let frameId = 0;
     let winnerElement = null;
-    let savedPrizeIndex = null;
-    let studentAccessToken = '';
-    let verifiedStudent = null;
 
-    async function apiRequest(url, options = {}) {
-      const response = await fetch(url, {
-        ...options,
-        headers: { 'Content-Type': 'application/json', ...(studentAccessToken ? { Authorization: `Bearer ${studentAccessToken}` } : {}), ...options.headers }
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        const error = new Error(data.message || '请求失败，请稍后重试。');
-        error.status = response.status;
-        error.data = data;
-        throw error;
-      }
-      return data;
-    }
-
-    function prizeSvg(prize) {
-      return `<svg viewBox="0 0 150 132" fill="none" style="--rarity:${prize.color};--soft:${prize.soft}">
-        <path d="m32 48 43-23 43 23v57l-43 23-43-23V48Z" fill="rgba(255,255,255,.93)"/>
-        <path d="m32 48 43 24 43-24M75 72v56" stroke="#292637" stroke-width="2.6" stroke-linejoin="round"/>
-        <path d="M32 48 75 25l43 23v57l-43 23-43-23V48Z" stroke="#292637" stroke-width="2.6" stroke-linejoin="round"/>
-        <g clip-path="url(#face)">${patterns[prize.pattern]}</g>
-        <path d="m32 48 43 24v56l-43-23V48Z" fill="var(--soft)" opacity=".65"/>
-        <path d="M48 80v2M61 86v2M50 96c2.5 3 7 3 9.5 0" stroke="#292637" stroke-width="2.8" stroke-linecap="round"/>
-        <defs><clipPath id="face"><path d="m75 72 43-24v57l-43 23V72Z"/></clipPath></defs>
-      </svg>`;
+    function characterImage(src, alt = '') {
+      return `<img src="${src}" alt="${alt}" draggable="false">`;
     }
 
     function createTrack() {
@@ -1020,7 +975,7 @@
           item.className = 'prize';
           item.dataset.prize = String(prizeIndex);
           item.style.cssText = `--rarity:${prize.color};--soft:${prize.soft}`;
-          item.innerHTML = `<div class="prize-art">${prizeSvg(prize)}</div><div class="prize-info"><span class="prize-name">${prize.name}</span><span class="rarity">${prize.rarity}</span></div>`;
+          item.innerHTML = `<div class="prize-art">${characterImage(prize.image, prize.name)}</div><div class="prize-info"><span class="prize-name">${prize.name}</span><span class="rarity">${prize.rarity}</span></div>`;
           fragment.appendChild(item);
         });
       }
@@ -1048,28 +1003,17 @@
       track.classList.remove('is-spinning');
       machine.classList.remove('is-locked');
       [...track.children].forEach(item => item.classList.remove('is-near', 'is-winner'));
-      const hasDrawn = savedPrizeIndex !== null;
-      const savedTrackIndex = hasDrawn ? prizes.length + savedPrizeIndex : 5;
-      centerTrackOn(savedTrackIndex, false);
+      centerTrackOn(5, false);
       startButton.disabled = false;
-      startButton.classList.toggle('is-claimed', hasDrawn);
-      startText.textContent = hasDrawn ? '查看我的兑换凭证' : '启动目标扫描';
-      machineStatus.textContent = hasDrawn ? '已完成' : '待命';
-      lockLabel.textContent = hasDrawn ? 'DRAW COMPLETE' : 'TARGET AREA';
-      hint.innerHTML = hasDrawn ? '本用户已完成抽取，<strong>不可重复抽取</strong>' : '每位用户仅可抽取 <strong>1 次</strong>，结果将自动保存';
-      if (hasDrawn) {
-        machine.classList.add('is-locked');
-        const savedItem = track.children[savedTrackIndex];
-        savedItem?.classList.add('is-near', 'is-winner');
-      }
+      startButton.classList.remove('is-claimed');
+      startText.textContent = '启动目标扫描';
+      machineStatus.textContent = '待命';
+      lockLabel.textContent = 'TARGET AREA';
+      hint.textContent = '每次扫描都会随机锁定一份惊喜礼物';
     }
 
     async function beginSpin() {
       if (isSpinning) return;
-      if (savedPrizeIndex !== null) {
-        showResult(prizes[savedPrizeIndex]);
-        return;
-      }
       isSpinning = true;
       startButton.classList.remove('is-claimed');
       startButton.disabled = true;
@@ -1083,24 +1027,9 @@
       playStartSound();
       navigator.vibrate?.([30, 35, 55]);
 
-      let winnerPrizeIndex;
-      try {
-        const response = await apiRequest('/api/student/draw', { method: 'POST', body: '{}' });
-        winnerPrizeIndex = response.draw.prizeId;
-      } catch (error) {
-        if (error.data?.draw) {
-          winnerPrizeIndex = error.data.draw.prizeId;
-        } else {
-          isSpinning = false;
-          machine.classList.remove('is-spinning');
-          startButton.disabled = false;
-          startText.textContent = '重新尝试扫描';
-          machineStatus.textContent = '连接失败';
-          hint.textContent = error.message;
-          return;
-        }
-      }
-      savedPrizeIndex = winnerPrizeIndex;
+      const randomValues = new Uint32Array(1);
+      crypto.getRandomValues(randomValues);
+      const winnerPrizeIndex = randomValues[0] % prizes.length;
       const winnerTrackIndex = 9 * prizes.length + winnerPrizeIndex;
       winnerElement = track.children[winnerTrackIndex];
       const destination = shell.clientWidth / 2 - itemCenter(winnerElement);
@@ -1178,7 +1107,7 @@
 
     function showResult(prize) {
       result.style.setProperty('--winner-color', prize.color);
-      resultArt.innerHTML = prizeSvg(prize);
+      resultArt.innerHTML = characterImage(prizes[1].image, '红色编程猫造型');
       resultName.textContent = prize.name;
       ticketPrizeName.textContent = prize.name;
       resultLabel.textContent = `TARGET LOCKED · ${prize.rarity}`;
@@ -1220,30 +1149,6 @@
       soundToggle.setAttribute('aria-label', muted ? '开启音效' : '关闭音效');
       soundToggle.title = muted ? '开启音效' : '关闭音效';
     }
-
-    identityForm.addEventListener('submit', async event => {
-      event.preventDefault();
-      identityError.textContent = '';
-      identitySubmit.disabled = true;
-      identitySubmit.textContent = '正在核验…';
-      try {
-        const response = await apiRequest('/api/student/verify', {
-          method: 'POST',
-          body: JSON.stringify({ studentName: document.querySelector('#loginName').value, studentId: document.querySelector('#loginId').value })
-        });
-        studentAccessToken = response.accessToken;
-        verifiedStudent = response.student;
-        savedPrizeIndex = response.draw?.prizeId ?? null;
-        resetTrack();
-        identityGate.classList.add('is-hidden');
-        document.querySelector('.subtitle').textContent = `${verifiedStudent.name}，启动飞船扫描器，寻找你的神秘礼物。`;
-      } catch (error) {
-        identityError.textContent = error.message;
-      } finally {
-        identitySubmit.disabled = false;
-        identitySubmit.textContent = '验证抽奖资格';
-      }
-    });
 
     createTrack();
     requestAnimationFrame(() => centerTrackOn(5, false));
