@@ -731,19 +731,13 @@
 
     .result-name {
       width: min(100%, 360px);
-      margin: 12px auto 0;
+      margin: 12px auto 18px;
       color: var(--winner-color);
       font-size: clamp(20px, 5.8vw, 25px);
       font-weight: 900;
       line-height: 1.38;
       text-wrap: balance;
       text-shadow: 0 0 20px color-mix(in srgb, var(--winner-color) 34%, transparent);
-    }
-
-    .result-copy {
-      margin: 7px 0 16px;
-      color: rgba(255,255,255,.65);
-      font-size: 13px;
     }
 
     .again-button {
@@ -808,7 +802,6 @@
       .result-art { width: 116px; }
       .result h2 { font-size: 29px; }
       .result-name { margin-top: 8px; }
-      .result-copy { margin-bottom: 10px; }
       .again-button { min-height: 46px; }
     }
 
@@ -873,12 +866,11 @@
   <section class="result" id="result" aria-hidden="true">
     <div class="result-backdrop"></div>
     <div class="particle-field" id="particleField" aria-hidden="true"></div>
-    <div class="result-card" role="dialog" aria-modal="true" aria-labelledby="resultTitle" aria-describedby="resultCopy">
+    <div class="result-card" role="dialog" aria-modal="true" aria-labelledby="resultTitle" aria-describedby="resultName">
       <div class="result-orbit"><div class="result-art" id="resultArt" aria-hidden="true"></div></div>
       <p class="result-label" id="resultLabel">TARGET LOCKED · RARE</p>
       <h2 id="resultTitle"><span>恭喜抽中</span><span class="result-prize-title">编程猫<span class="limited-gold">限量版</span>积木</span></h2>
       <p class="result-name" id="resultName">截图保存 发送给老师兑换</p>
-      <p class="result-copy" id="resultCopy">截图保存，课后寻找老师兑换</p>
       <button class="again-button" id="againButton" type="button">返回探索舱</button>
     </div>
   </section>
