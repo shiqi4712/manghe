@@ -367,7 +367,7 @@
     }
 
     .prize-art {
-      height: 72%;
+      height: calc(100% - 42px);
       display: grid;
       place-items: center;
     }
@@ -383,8 +383,9 @@
     .prize-info {
       position: relative;
       width: 100%;
-      min-height: 35px;
-      padding: 8px 8px 6px;
+      height: 42px;
+      min-height: 42px;
+      padding: 4px 7px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -395,17 +396,19 @@
     }
 
     .prize-name {
-      display: block;
+      display: -webkit-box;
       min-width: 0;
       max-width: 100%;
       overflow: hidden;
       color: #fff;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 900;
-      line-height: 1.2;
-      text-overflow: ellipsis;
+      line-height: 1.15;
+      text-align: center;
       text-shadow: 0 2px 8px rgba(0,0,0,.72), 0 0 12px color-mix(in srgb, var(--rarity) 24%, transparent);
-      white-space: nowrap;
+      white-space: normal;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
     }
 
     .rarity {
@@ -868,13 +871,13 @@
 
   <script>
     const prizes = [
-      { name: '珊瑚信号', rarity: '闪耀', color: '#ff705f', soft: '#ffc2b9', image: '/assets/characters/character-1.png' },
-      { name: '晴空飞船', rarity: '稀有', color: '#58b9ff', soft: '#b9e2ff', image: '/assets/characters/character-2.png' },
-      { name: '柠檬唱片', rarity: '奇趣', color: '#d9e83e', soft: '#f2f7a8', image: '/assets/characters/character-3.png' },
-      { name: '莓果轨迹', rarity: '闪耀', color: '#ed79b2', soft: '#f8bfdb', image: '/assets/characters/character-4.png' },
-      { name: '薄荷方程', rarity: '珍藏', color: '#43d7b6', soft: '#aef0df', image: '/assets/characters/character-5.png' },
-      { name: '橘子频道', rarity: '奇趣', color: '#ffad4d', soft: '#ffd29e', image: '/assets/characters/character-6.png' },
-      { name: '银色月球', rarity: '稀有', color: '#b7c2d5', soft: '#e4e9f1', image: '/assets/characters/character-7.png' }
+      { name: '文具套装', rarity: '闪耀', color: '#ff705f', soft: '#ffc2b9', image: '/assets/characters/character-1.png' },
+      { name: '编程猫限量版积木', rarity: '稀有', color: '#58b9ff', soft: '#b9e2ff', image: '/assets/characters/character-2.png' },
+      { name: '编程猫金牌', rarity: '奇趣', color: '#d9e83e', soft: '#f2f7a8', image: '/assets/characters/character-3.png' },
+      { name: '编程猫笔记本', rarity: '闪耀', color: '#ed79b2', soft: '#f8bfdb', image: '/assets/characters/character-4.png' },
+      { name: '赛车', rarity: '珍藏', color: '#43d7b6', soft: '#aef0df', image: '/assets/characters/character-5.png' },
+      { name: '直升机', rarity: '奇趣', color: '#ffad4d', soft: '#ffd29e', image: '/assets/characters/character-6.png' },
+      { name: '编程猫玩偶', rarity: '稀有', color: '#b7c2d5', soft: '#e4e9f1', image: '/assets/characters/character-7.png' }
     ];
 
     const resultStorageKey = 'codemao-blind-box-result-v3';

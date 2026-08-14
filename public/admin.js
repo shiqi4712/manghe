@@ -6,8 +6,8 @@ let pendingConfirm = null;
 let activeStudentId = null;
 
 const prizeCatalog = [
-  ['珊瑚信号', '#ff705f'], ['晴空飞船', '#58b9ff'], ['柠檬唱片', '#d9e83e'], ['莓果轨迹', '#ed79b2'],
-  ['薄荷方程', '#43d7b6'], ['橘子频道', '#ffad4d'], ['银色月球', '#b7c2d5']
+  ['文具套装', '#ff705f'], ['编程猫限量版积木', '#58b9ff'], ['编程猫金牌', '#d9e83e'], ['编程猫笔记本', '#ed79b2'],
+  ['赛车', '#43d7b6'], ['直升机', '#ffad4d'], ['编程猫玩偶', '#b7c2d5']
 ];
 
 const rows = document.querySelector('#studentRows');
