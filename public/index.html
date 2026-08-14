@@ -322,6 +322,10 @@
       transition: transform var(--reel-time) cubic-bezier(.1, .85, .25, 1);
     }
 
+    .track.is-idle {
+      transition: transform 2.8s linear;
+    }
+
     .prize {
       --rarity: #56b7ff;
       --soft: #b8e0ff;
@@ -712,7 +716,17 @@
       margin: 0;
       font-family: "Arial Rounded MT Bold", "YouYuan", "PingFang SC", sans-serif;
       font-size: clamp(30px, 9vw, 40px);
+      line-height: 1.18;
       letter-spacing: 0;
+    }
+
+    .result h2 > span { display: block; }
+
+    .result-prize-title { margin-top: 5px; }
+
+    .limited-gold {
+      color: #ffd45c;
+      text-shadow: 0 0 10px rgba(255, 212, 92, .42), 0 2px 0 rgba(113, 69, 0, .78);
     }
 
     .result-name {
@@ -827,7 +841,7 @@
 
     <header>
       <p class="eyebrow">MISSION BC-07 · 礼物探索任务</p>
-      <h1>探索星际目标<br>锁定惊喜礼物</h1>
+      <h1>恭喜第一课满分通过<br>快来试试你的手气吧</h1>
       <p class="subtitle">启动飞船扫描器，看看今天会发现哪份神秘礼物。</p>
     </header>
 
@@ -862,7 +876,7 @@
     <div class="result-card" role="dialog" aria-modal="true" aria-labelledby="resultTitle" aria-describedby="resultCopy">
       <div class="result-orbit"><div class="result-art" id="resultArt" aria-hidden="true"></div></div>
       <p class="result-label" id="resultLabel">TARGET LOCKED · RARE</p>
-      <h2 id="resultTitle">目标礼物已锁定 ✨</h2>
+      <h2 id="resultTitle"><span>恭喜抽中</span><span class="result-prize-title">编程猫<span class="limited-gold">限量版</span>积木</span></h2>
       <p class="result-name" id="resultName">截图保存 发送给老师兑换</p>
       <p class="result-copy" id="resultCopy">截图保存，课后寻找老师兑换</p>
       <button class="again-button" id="againButton" type="button">返回探索舱</button>
@@ -882,6 +896,7 @@
 
     const resultStorageKey = 'codemao-blind-box-result-v3';
     const fixedPrizeIndex = 1;
+    const initialPrizeIndex = 3;
 
     const track = document.querySelector('#track');
     const shell = document.querySelector('#reelShell');
@@ -905,6 +920,9 @@
     let muted = true;
     let lastCenterIndex = -1;
     let frameId = 0;
+    let idleTimer = 0;
+    let idleScrolling = false;
+    let idleTrackIndex = 4 * prizes.length + initialPrizeIndex;
     let winnerElement = null;
     let savedPrizeIndex = readSavedPrizeIndex();
 
@@ -960,16 +978,54 @@
       track.style.transform = `translate3d(${destination}px, -50%, 0)`;
     }
 
+    function advanceIdleScroll() {
+      if (!idleScrolling || isSpinning) return;
+
+      const loopEndIndex = 5 * prizes.length + initialPrizeIndex;
+      if (idleTrackIndex >= loopEndIndex) {
+        track.classList.remove('is-idle');
+        idleTrackIndex = 4 * prizes.length + initialPrizeIndex;
+        centerTrackOn(idleTrackIndex, false);
+        void track.offsetWidth;
+      }
+
+      track.classList.add('is-idle');
+      idleTrackIndex += 1;
+      centerTrackOn(idleTrackIndex, false);
+    }
+
+    function startIdleScroll() {
+      if (savedPrizeIndex !== null || isSpinning || reducedMotion) return;
+      clearTimeout(idleTimer);
+      idleScrolling = true;
+      idleTrackIndex = 4 * prizes.length + initialPrizeIndex;
+      track.classList.remove('is-idle', 'is-spinning');
+      centerTrackOn(idleTrackIndex, false);
+      idleTimer = window.setTimeout(advanceIdleScroll, 1400);
+    }
+
+    function stopIdleScroll() {
+      clearTimeout(idleTimer);
+      if (!idleScrolling) return;
+      const matrix = new DOMMatrixReadOnly(getComputedStyle(track).transform);
+      idleScrolling = false;
+      track.classList.remove('is-idle');
+      track.style.transform = `translate3d(${matrix.m41}px, -50%, 0)`;
+      void track.offsetWidth;
+    }
+
     function resetTrack() {
       cancelAnimationFrame(frameId);
+      clearTimeout(idleTimer);
       isSpinning = false;
+      idleScrolling = false;
       lastCenterIndex = -1;
       winnerElement = null;
-      track.classList.remove('is-spinning');
+      track.classList.remove('is-spinning', 'is-idle');
       machine.classList.remove('is-locked');
       [...track.children].forEach(item => item.classList.remove('is-near', 'is-winner'));
       const claimedTrackIndex = savedPrizeIndex === null ? null : 5 * prizes.length + savedPrizeIndex;
-      centerTrackOn(claimedTrackIndex ?? 5, false);
+      centerTrackOn(claimedTrackIndex ?? (4 * prizes.length + initialPrizeIndex), false);
       startButton.disabled = false;
       startButton.classList.toggle('is-claimed', savedPrizeIndex !== null);
 
@@ -986,6 +1042,7 @@
         machineStatus.textContent = '待命';
         lockLabel.textContent = 'TARGET AREA';
         hint.textContent = '每台设备仅能抽取一次，请认真开启你的惊喜';
+        startIdleScroll();
       }
     }
 
@@ -995,6 +1052,7 @@
         showResult(prizes[savedPrizeIndex]);
         return;
       }
+      stopIdleScroll();
       isSpinning = true;
       startButton.classList.remove('is-claimed');
       startButton.disabled = true;
@@ -1133,7 +1191,9 @@
     requestAnimationFrame(resetTrack);
     startButton.addEventListener('click', beginSpin);
     track.addEventListener('transitionend', event => {
-      if (event.target === track && event.propertyName === 'transform') finishSpin();
+      if (event.target !== track || event.propertyName !== 'transform') return;
+      if (isSpinning) finishSpin();
+      else if (idleScrolling) advanceIdleScroll();
     });
     againButton.addEventListener('click', closeResult);
     soundToggle.addEventListener('click', toggleSound);
