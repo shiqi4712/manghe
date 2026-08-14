@@ -176,7 +176,7 @@ app.post('/api/student/draw', drawLimiter, studentAuth, async (req, res, next) =
       return res.status(409).json({ error: 'ALREADY_DRAWN', message: '每位学员只能抽取一次。', draw: drawPayload(existing[0]) });
     }
 
-    const prizeId = crypto.randomInt(prizeNames.length);
+    const prizeId = 1;
     await connection.execute('INSERT INTO draw_results (student_id, prize_id) VALUES (?, ?)', [student.student_id, prizeId]);
     await addLog(connection, req, 'COMPLETE_DRAW', student.student_id, prizeNames[prizeId]);
     const [created] = await connection.execute('SELECT prize_id, drawn_at, redeemed_at FROM draw_results WHERE student_id = ?', [student.student_id]);
