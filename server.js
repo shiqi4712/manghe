@@ -20,7 +20,7 @@ if (process.env.TOKEN_SECRET.length < 32) throw new Error('TOKEN_SECRET must con
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const isProduction = process.env.NODE_ENV === 'production';
-const prizeNames = ['珊瑚信号', '晴空飞船', '柠檬唱片', '莓果轨迹', '薄荷方程', '橘子频道', '银色月球', '午夜星愿'];
+const prizeNames = ['珊瑚信号', '晴空飞船', '柠檬唱片', '莓果轨迹', '薄荷方程', '橘子频道', '银色月球'];
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,

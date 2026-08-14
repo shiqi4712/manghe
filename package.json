@@ -2,7 +2,7 @@
   "name": "bianchengmao-surprise-draw",
   "version": "1.0.0",
   "private": true,
-  "description": "Student ID based one-time surprise draw with MySQL administration.",
+  "description": "Browser-based one-time surprise draw with MySQL administration.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -878,13 +878,13 @@
     </nav>
 
     <header>
-      <p class="eyebrow">MISSION BC-08 · 礼物探索任务</p>
+      <p class="eyebrow">MISSION BC-07 · 礼物探索任务</p>
       <h1>探索星际目标<br>锁定惊喜礼物</h1>
       <p class="subtitle">启动飞船扫描器，看看今天会发现哪份神秘礼物。</p>
     </header>
 
     <section class="machine" id="machine" aria-label="盲盒抽选传送带">
-      <div class="machine-label"><span>DEEP SPACE SCANNER / 08</span><span class="live" id="machineStatus">待命</span></div>
+      <div class="machine-label"><span>DEEP SPACE SCANNER / 07</span><span class="live" id="machineStatus">待命</span></div>
       <div class="reel-shell" id="reelShell">
         <div class="track" id="track"></div>
         <div class="scan-sweep" aria-hidden="true"></div>
@@ -900,7 +900,7 @@
         <span class="start-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="7.5" stroke="currentColor" stroke-width="2"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
         <span id="startText">启动目标扫描</span>
       </button>
-      <p class="hint" id="hint">每次扫描都会随机锁定一份惊喜礼物</p>
+      <p class="hint" id="hint">每台设备仅能抽取一次，请认真开启你的惊喜</p>
     </section>
 
     <footer class="status-row"><span>SPACE MISSION · AFTER CLASS</span><span>● NAVIGATION ONLINE</span></footer>
@@ -915,7 +915,7 @@
       <div class="result-orbit"><div class="result-art" id="resultArt" aria-hidden="true"></div></div>
       <p class="result-label" id="resultLabel">TARGET LOCKED · RARE</p>
       <h2 id="resultTitle">目标礼物已锁定 ✨</h2>
-      <p class="result-name" id="resultName">请在第二节课下课后找老师兑换</p>
+      <p class="result-name" id="resultName">截图保存 发送给老师兑换</p>
       <p class="result-copy" id="resultCopy">截图保存，课后寻找老师兑换</p>
       <div class="capture-ticket" aria-label="截图兑换提醒">
         <span class="capture-icon" aria-hidden="true">
@@ -926,7 +926,7 @@
           <span class="capture-copy">保存当前页面，课后向老师出示截图，兑换 <strong id="ticketPrizeName">星光旅行家</strong></span>
         </span>
       </div>
-      <button class="again-button" id="againButton" type="button">再抽一次</button>
+      <button class="again-button" id="againButton" type="button">返回探索舱</button>
     </div>
   </section>
 
@@ -938,9 +938,10 @@
       { name: '莓果轨迹', rarity: '闪耀', color: '#ed79b2', soft: '#f8bfdb', image: '/assets/characters/character-4.png' },
       { name: '薄荷方程', rarity: '珍藏', color: '#43d7b6', soft: '#aef0df', image: '/assets/characters/character-5.png' },
       { name: '橘子频道', rarity: '奇趣', color: '#ffad4d', soft: '#ffd29e', image: '/assets/characters/character-6.png' },
-      { name: '银色月球', rarity: '稀有', color: '#b7c2d5', soft: '#e4e9f1', image: '/assets/characters/character-7.png' },
-      { name: '午夜星愿', rarity: '传说', color: '#a990ff', soft: '#d5c9ff', image: '/assets/characters/character-8.png' }
+      { name: '银色月球', rarity: '稀有', color: '#b7c2d5', soft: '#e4e9f1', image: '/assets/characters/character-7.png' }
     ];
+
+    const resultStorageKey = 'codemao-blind-box-result-v3';
 
     const track = document.querySelector('#track');
     const shell = document.querySelector('#reelShell');
@@ -966,6 +967,37 @@
     let lastCenterIndex = -1;
     let frameId = 0;
     let winnerElement = null;
+    let savedPrizeIndex = readSavedPrizeIndex();
+
+    function readSavedPrizeIndex() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(resultStorageKey));
+        return Number.isInteger(stored?.prizeIndex) && prizes[stored.prizeIndex]
+          ? stored.prizeIndex
+          : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function savePrizeIndex(prizeIndex) {
+      savedPrizeIndex = prizeIndex;
+      try {
+        localStorage.setItem(resultStorageKey, JSON.stringify({ prizeIndex }));
+      } catch {
+        // The current page session still remains locked when browser storage is unavailable.
+      }
+    }
+
+    function randomPrizeIndex() {
+      const range = 0x100000000;
+      const limit = Math.floor(range / prizes.length) * prizes.length;
+      const values = new Uint32Array(1);
+      do {
+        crypto.getRandomValues(values);
+      } while (values[0] >= limit);
+      return values[0] % prizes.length;
+    }
 
     function characterImage(src, alt = '') {
       return `<img src="${src}" alt="${alt}" draggable="false">`;
@@ -1007,17 +1039,33 @@
       track.classList.remove('is-spinning');
       machine.classList.remove('is-locked');
       [...track.children].forEach(item => item.classList.remove('is-near', 'is-winner'));
-      centerTrackOn(5, false);
+      const claimedTrackIndex = savedPrizeIndex === null ? null : 5 * prizes.length + savedPrizeIndex;
+      centerTrackOn(claimedTrackIndex ?? 5, false);
       startButton.disabled = false;
-      startButton.classList.remove('is-claimed');
-      startText.textContent = '启动目标扫描';
-      machineStatus.textContent = '待命';
-      lockLabel.textContent = 'TARGET AREA';
-      hint.textContent = '每次扫描都会随机锁定一份惊喜礼物';
+      startButton.classList.toggle('is-claimed', savedPrizeIndex !== null);
+
+      if (claimedTrackIndex !== null) {
+        winnerElement = track.children[claimedTrackIndex];
+        winnerElement?.classList.add('is-near', 'is-winner');
+        machine.classList.add('is-locked');
+        startText.textContent = '查看我的兑换凭证';
+        machineStatus.textContent = '任务完成';
+        lockLabel.textContent = 'PRIZE SAVED';
+        hint.textContent = '本设备已完成抽取，请保存截图并发送给老师兑换';
+      } else {
+        startText.textContent = '启动目标扫描';
+        machineStatus.textContent = '待命';
+        lockLabel.textContent = 'TARGET AREA';
+        hint.textContent = '每台设备仅能抽取一次，请认真开启你的惊喜';
+      }
     }
 
     async function beginSpin() {
       if (isSpinning) return;
+      if (savedPrizeIndex !== null) {
+        showResult(prizes[savedPrizeIndex]);
+        return;
+      }
       isSpinning = true;
       startButton.classList.remove('is-claimed');
       startButton.disabled = true;
@@ -1031,7 +1079,7 @@
       playStartSound();
       navigator.vibrate?.([30, 35, 55]);
 
-      const winnerPrizeIndex = 1;
+      const winnerPrizeIndex = randomPrizeIndex();
       const winnerTrackIndex = 9 * prizes.length + winnerPrizeIndex;
       winnerElement = track.children[winnerTrackIndex];
       const destination = shell.clientWidth / 2 - itemCenter(winnerElement);
@@ -1074,6 +1122,7 @@
       winnerElement.classList.add('is-near', 'is-winner');
       const prizeIndex = Number(winnerElement.dataset.prize);
       const prize = prizes[prizeIndex];
+      savePrizeIndex(prizeIndex);
       navigator.vibrate?.([60, 45, 90]);
       playWinSound();
 
@@ -1109,8 +1158,8 @@
 
     function showResult(prize) {
       result.style.setProperty('--winner-color', prize.color);
-      resultArt.innerHTML = characterImage(prizes[1].image, '红色编程猫造型');
-      resultName.textContent = '请在第二节课下课后找老师兑换';
+      resultArt.innerHTML = characterImage(prize.image, prize.name);
+      resultName.textContent = '截图保存 发送给老师兑换';
       ticketPrizeName.textContent = prize.name;
       resultLabel.textContent = `TARGET LOCKED · ${prize.rarity}`;
       buildParticles();
@@ -1153,7 +1202,7 @@
     }
 
     createTrack();
-    requestAnimationFrame(() => centerTrackOn(5, false));
+    requestAnimationFrame(resetTrack);
     startButton.addEventListener('click', beginSpin);
     track.addEventListener('transitionend', event => {
       if (event.target === track && event.propertyName === 'transform') finishSpin();
@@ -1161,7 +1210,7 @@
     againButton.addEventListener('click', closeResult);
     soundToggle.addEventListener('click', toggleSound);
     window.addEventListener('resize', () => {
-      if (!isSpinning && !result.classList.contains('is-visible')) centerTrackOn(5, false);
+      if (!isSpinning && !result.classList.contains('is-visible')) resetTrack();
     });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && result.classList.contains('is-visible')) closeResult();
