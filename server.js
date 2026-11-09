@@ -21,6 +21,7 @@ const app = express();
 const port = Number(process.env.PORT || 3000);
 const isProduction = process.env.NODE_ENV === 'production';
 const prizeNames = ['文具套装', '编程猫限量版积木', '编程猫金牌', '编程猫笔记本', '赛车', '直升机', '编程猫玩偶'];
+const fixedPrizeId = 3;
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -102,8 +103,8 @@ function adminAuth(req, res, next) {
 function drawPayload(row) {
   if (!row || row.prize_id === null || row.prize_id === undefined) return null;
   return {
-    prizeId: Number(row.prize_id),
-    prizeName: prizeNames[Number(row.prize_id)],
+    prizeId: fixedPrizeId,
+    prizeName: prizeNames[fixedPrizeId],
     drawnAt: row.drawn_at,
     redeemed: Boolean(row.redeemed_at),
     redeemedAt: row.redeemed_at
@@ -176,7 +177,7 @@ app.post('/api/student/draw', drawLimiter, studentAuth, async (req, res, next) =
       return res.status(409).json({ error: 'ALREADY_DRAWN', message: '每位学员只能抽取一次。', draw: drawPayload(existing[0]) });
     }
 
-    const prizeId = 1;
+    const prizeId = fixedPrizeId;
     await connection.execute('INSERT INTO draw_results (student_id, prize_id) VALUES (?, ?)', [student.student_id, prizeId]);
     await addLog(connection, req, 'COMPLETE_DRAW', student.student_id, prizeNames[prizeId]);
     const [created] = await connection.execute('SELECT prize_id, drawn_at, redeemed_at FROM draw_results WHERE student_id = ?', [student.student_id]);
@@ -234,7 +235,13 @@ app.get('/api/admin/students', adminAuth, async (req, res, next) => {
          FROM students s LEFT JOIN draw_results d ON d.student_id = s.student_id
         WHERE s.deleted_at IS NULL ORDER BY s.created_at DESC`
     );
-    res.json({ students: rows.map(row => ({ ...row, isActive: Boolean(row.isActive), prizeName: row.prizeId === null ? null : prizeNames[row.prizeId], redeemed: Boolean(row.redeemedAt) })) });
+    res.json({ students: rows.map(row => ({
+      ...row,
+      isActive: Boolean(row.isActive),
+      prizeId: row.prizeId === null ? null : fixedPrizeId,
+      prizeName: row.prizeId === null ? null : prizeNames[fixedPrizeId],
+      redeemed: Boolean(row.redeemedAt)
+    })) });
   } catch (error) { next(error); }
 });
 

@@ -724,11 +724,6 @@
 
     .result-prize-title { margin-top: 5px; }
 
-    .limited-gold {
-      color: #ffd45c;
-      text-shadow: 0 0 10px rgba(255, 212, 92, .42), 0 2px 0 rgba(113, 69, 0, .78);
-    }
-
     .result-name {
       width: min(100%, 360px);
       margin: 12px auto 18px;
@@ -834,7 +829,7 @@
 
     <header>
       <p class="eyebrow">MISSION BC-07 · 礼物探索任务</p>
-      <h1>恭喜第一课满分通过<br>快来试试你的手气吧</h1>
+      <h1>恭喜第三课满分通过<br>快来试试你的手气吧</h1>
       <p class="subtitle">启动飞船扫描器，看看今天会发现哪份神秘礼物。</p>
     </header>
 
@@ -869,7 +864,7 @@
     <div class="result-card" role="dialog" aria-modal="true" aria-labelledby="resultTitle" aria-describedby="resultName">
       <div class="result-orbit"><div class="result-art" id="resultArt" aria-hidden="true"></div></div>
       <p class="result-label" id="resultLabel">TARGET LOCKED · RARE</p>
-      <h2 id="resultTitle"><span>恭喜抽中</span><span class="result-prize-title">编程猫<span class="limited-gold">限量版</span>积木</span></h2>
+      <h2 id="resultTitle"><span>恭喜抽中</span><span class="result-prize-title">编程猫笔记本</span></h2>
       <p class="result-name" id="resultName">截图保存 发送给老师兑换</p>
       <button class="again-button" id="againButton" type="button">返回探索舱</button>
     </div>
@@ -887,7 +882,7 @@
     ];
 
     const resultStorageKey = 'codemao-blind-box-result-v3';
-    const fixedPrizeIndex = 1;
+    const fixedPrizeIndex = 3;
     const initialPrizeIndex = 3;
 
     const track = document.querySelector('#track');
